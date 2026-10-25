@@ -1,0 +1,79 @@
+// Conversation.swift
+// AppCore
+// Author: David M. Anderson
+// Built with AI assistance (Claude, Anthropic)
+
+import Foundation
+
+// One clip in a conversation with a person or group, in the order sent.
+enum ConversationItem: Identifiable {
+    case received(ReceivedClip)
+    case sent(SentClip)
+
+    var id: String {
+        switch self {
+        case .received(let clip): clip.id
+        case .sent(let clip): clip.id
+        }
+    }
+
+    var createdAt: Date {
+        switch self {
+        case .received(let clip): clip.createdAt
+        case .sent(let clip): clip.createdAt
+        }
+    }
+}
+
+extension ClipList {
+    func conversation(with recipient: Recipient) -> [ConversationItem] {
+        let items = received.filter { $0.belongs(to: recipient) }.map(ConversationItem.received)
+            + sent.filter { $0.belongs(to: recipient) }.map(ConversationItem.sent)
+        return items.sorted { $0.createdAt < $1.createdAt }
+    }
+
+    func unplayedCount(from recipient: Recipient) -> Int {
+        received.filter { $0.belongs(to: recipient) && $0.playedAt == nil }.count
+    }
+
+    func lastActivity(with recipient: Recipient) -> Date? {
+        let dates = received.filter { $0.belongs(to: recipient) }.map(\.createdAt)
+            + sent.filter { $0.belongs(to: recipient) }.map(\.createdAt)
+        return dates.max()
+    }
+}
+
+// A person or group in the list of conversations.
+struct ConversationEntry: Identifiable {
+    let recipient: Recipient
+    let systemImage: String
+    let isBot: Bool
+
+    var id: String { recipient.key }
+}
+
+extension AppModel {
+    // People and groups together, the latest conversation first, then those
+    // with no clips by name. Bots come last, so testing with Echo does not
+    // push people down.
+    var conversations: [ConversationEntry] {
+        guard let contacts else { return [] }
+        let entries = contacts.groups.map {
+            ConversationEntry(recipient: .group(id: $0.id, name: $0.name), systemImage: "person.2", isBot: false)
+        } + contacts.users.map {
+            ConversationEntry(recipient: .person(id: $0.id, name: $0.displayName),
+                              systemImage: $0.isBot ? "arrow.uturn.backward" : "person", isBot: $0.isBot)
+        }
+        return entries.sorted { a, b in
+            if a.isBot != b.isBot {
+                return !a.isBot
+            }
+            switch (clips?.lastActivity(with: a.recipient), clips?.lastActivity(with: b.recipient)) {
+            case let (aDate?, bDate?): return aDate > bDate
+            case (.some, nil): return true
+            case (nil, .some): return false
+            case (nil, nil): return a.recipient.name.localizedStandardCompare(b.recipient.name) == .orderedAscending
+            }
+        }
+    }
+}

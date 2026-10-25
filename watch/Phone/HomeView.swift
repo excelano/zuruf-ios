@@ -11,7 +11,7 @@ struct HomeView: View {
     var body: some View {
         NavigationStack(path: $model.talkPath) {
             List {
-                ForEach(conversations) { conversation in
+                ForEach(model.conversations) { conversation in
                     ContactRow(recipient: conversation.recipient, systemImage: conversation.systemImage)
                 }
                 if let error = model.refreshError {
@@ -36,38 +36,6 @@ struct HomeView: View {
             }
         }
     }
-
-    // People and groups together, the latest conversation first, then those
-    // with no clips by name. Bots come last, so testing with Echo does not
-    // push people down.
-    private var conversations: [ConversationEntry] {
-        guard let contacts = model.contacts else { return [] }
-        let entries = contacts.groups.map {
-            ConversationEntry(recipient: .group(id: $0.id, name: $0.name), systemImage: "person.2", isBot: false)
-        } + contacts.users.map {
-            ConversationEntry(recipient: .person(id: $0.id, name: $0.displayName),
-                              systemImage: $0.isBot ? "arrow.uturn.backward" : "person", isBot: $0.isBot)
-        }
-        return entries.sorted { a, b in
-            if a.isBot != b.isBot {
-                return !a.isBot
-            }
-            switch (model.clips?.lastActivity(with: a.recipient), model.clips?.lastActivity(with: b.recipient)) {
-            case let (aDate?, bDate?): return aDate > bDate
-            case (.some, nil): return true
-            case (nil, .some): return false
-            case (nil, nil): return a.recipient.name.localizedStandardCompare(b.recipient.name) == .orderedAscending
-            }
-        }
-    }
-}
-
-private struct ConversationEntry: Identifiable {
-    let recipient: Recipient
-    let systemImage: String
-    let isBot: Bool
-
-    var id: String { recipient.key }
 }
 
 private struct ContactRow: View {

@@ -30,21 +30,10 @@ struct HomeView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                if let groups = model.contacts?.groups, !groups.isEmpty {
-                    Section("Groups") {
-                        ForEach(groups) { group in
-                            NavigationLink(value: Recipient.group(id: group.id, name: group.name)) {
-                                Label(group.name, systemImage: "person.2")
-                            }
-                        }
-                    }
-                }
-                if let people = model.contacts?.users {
-                    Section("People") {
-                        ForEach(people) { person in
-                            NavigationLink(value: Recipient.person(id: person.id, name: person.displayName)) {
-                                Label(person.displayName, systemImage: person.isBot ? "arrow.uturn.backward" : "person")
-                            }
+                Section {
+                    ForEach(model.conversations) { conversation in
+                        NavigationLink(value: conversation.recipient) {
+                            Label(conversation.recipient.name, systemImage: conversation.systemImage)
                         }
                     }
                 }
