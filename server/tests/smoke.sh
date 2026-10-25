@@ -194,12 +194,32 @@ call POST /v1/clips $bob -F "to_user=$alice_id" -F "audio=@$work/short.m4a"
 expect 429 "eleventh upload in a minute is rate limited"
 
 # pushTargets() run directly, since the test server has no APNs keys to push with.
-body=$(php -r 'require getenv("ZURUF_CONFIG"); require $argv[1] . "/src/db.php"; require $argv[1] . "/src/apns.php";
-    echo json_encode(array_column(array_map(fn($t) => [$t[0]["id"], $t[1]], pushTargets(array_slice($argv, 2))), 1, 0));' \
-    "$server" "$alice_id" "$bob_id")
+push_targets() {
+    body=$(php -r 'require getenv("ZURUF_CONFIG"); require $argv[1] . "/src/db.php"; require $argv[1] . "/src/apns.php";
+        echo json_encode(array_column(array_map(fn($t) => [$t[0]["id"], $t[1]], pushTargets(array_slice($argv, 2))), 1, 0));' \
+        "$server" "$alice_id" "$bob_id")
+}
+call GET /v1/account $alice
+check "alerts default to the watch" '.alerts == "watch"'
+push_targets
 check "Alice's watch gets the alert" ".[\"$alice_watch\"] == \"alert\""
 check "Alice's phone gets only a background push" ".[\"$alice_phone_device\"] == \"background\""
 check "Bob, with only a phone, gets the alert there" ".[\"$bob_device\"] == \"alert\""
+json PATCH /v1/account $alice_phone '{"alerts": "phone"}'
+expect 200 "set alerts to the phone"
+call GET /v1/account $alice
+check "the setting is shared by Alice's devices" '.alerts == "phone"'
+push_targets
+check "with alerts on the phone, Alice's phone gets the alert" ".[\"$alice_phone_device\"] == \"alert\""
+check "with alerts on the phone, Alice's watch gets nothing" "has(\"$alice_watch\") | not"
+json PATCH /v1/account $bob '{"alerts": "watch"}'
+push_targets
+check "Bob, with only a phone, still gets the alert there" ".[\"$bob_device\"] == \"alert\""
+json PATCH /v1/account $alice '{"alerts": "both"}'
+push_targets
+check "with alerts on both, both of Alice's devices get the alert" ".[\"$alice_watch\"] == \"alert\" and .[\"$alice_phone_device\"] == \"alert\""
+json PATCH /v1/account $alice '{"alerts": "android"}'
+expect 422 "reject unknown alerts"
 call GET /v1/clips $alice_phone
 check "the linked phone sees Alice's inbox" '.received | length > 0'
 

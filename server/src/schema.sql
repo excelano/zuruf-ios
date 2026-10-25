@@ -11,6 +11,7 @@ CREATE TABLE users (
     id           TEXT PRIMARY KEY,
     display_name TEXT NOT NULL,
     is_bot       INTEGER NOT NULL DEFAULT 0,
+    alerts       TEXT NOT NULL DEFAULT 'watch' CHECK (alerts IN ('watch', 'phone', 'both')),
     created_at   INTEGER NOT NULL
 );
 

@@ -15,6 +15,7 @@ const MIGRATIONS = [
         PRIMARY KEY (clip_id, user_id)
     )',
     "ALTER TABLE devices ADD COLUMN platform TEXT NOT NULL DEFAULT 'watchos' CHECK (platform IN ('watchos', 'ios'))",
+    "ALTER TABLE users ADD COLUMN alerts TEXT NOT NULL DEFAULT 'watch' CHECK (alerts IN ('watch', 'phone', 'both'))",
 ];
 
 function getDb(): PDO {

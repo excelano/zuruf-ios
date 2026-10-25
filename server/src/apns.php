@@ -132,23 +132,31 @@ function pushClip(array $clip): void {
     }
 }
 
-// Someone with a watch is alerted only there. Their phone gets a background
-// push, so it can fetch and transcribe the clip without a second alert.
+// Someone with both a watch and a phone is alerted where their alerts setting
+// says. A phone left out of the alert gets a background push, so it can fetch
+// and transcribe the clip; a watch left out gets nothing. Someone with only
+// one kind of device is alerted there.
 function pushTargets(array $userIds): array {
     $placeholders = implode(',', array_fill(0, count($userIds), '?'));
     $devices = query(
-        "SELECT id, user_id, platform, apns_token, apns_env FROM devices
-         WHERE apns_token IS NOT NULL AND user_id IN ($placeholders)",
+        "SELECT d.id, d.user_id, d.platform, d.apns_token, d.apns_env, u.alerts FROM devices d
+         JOIN users u ON u.id = d.user_id
+         WHERE d.apns_token IS NOT NULL AND d.user_id IN ($placeholders)",
         $userIds
     )->fetchAll();
-    $hasWatch = [];
+    $platforms = [];
     foreach ($devices as $device) {
-        if ($device['platform'] === 'watchos') {
-            $hasWatch[$device['user_id']] = true;
+        $platforms[$device['user_id']][$device['platform']] = true;
+    }
+    $targets = [];
+    foreach ($devices as $device) {
+        $isWatch = $device['platform'] === 'watchos';
+        $hasOther = isset($platforms[$device['user_id']][$isWatch ? 'ios' : 'watchos']);
+        if (!$hasOther || $device['alerts'] === 'both' || $device['alerts'] === ($isWatch ? 'watch' : 'phone')) {
+            $targets[] = [$device, 'alert'];
+        } elseif (!$isWatch) {
+            $targets[] = [$device, 'background'];
         }
     }
-    return array_map(
-        fn($device) => [$device, $device['platform'] === 'ios' && isset($hasWatch[$device['user_id']]) ? 'background' : 'alert'],
-        $devices
-    );
+    return $targets;
 }

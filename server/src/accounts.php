@@ -123,6 +123,24 @@ function deleteUser(string $userId): bool {
     return true;
 }
 
+// Which of this person's devices get the alert when both a watch and a phone
+// are signed in.
+const ALERTS = ['watch', 'phone', 'both'];
+
+function getAccount(array $device): never {
+    $alerts = query('SELECT alerts FROM users WHERE id = ?', [$device['user_id']])->fetchColumn();
+    respond(200, ['alerts' => $alerts]);
+}
+
+function updateAccount(array $device, array $body): never {
+    $alerts = (string)($body['alerts'] ?? '');
+    if (!in_array($alerts, ALERTS, true)) {
+        fail(422, 'invalid_alerts');
+    }
+    query('UPDATE users SET alerts = ? WHERE id = ?', [$alerts, $device['user_id']]);
+    respond(200, ['alerts' => $alerts]);
+}
+
 function deleteAccount(array $device): never {
     deleteUser($device['user_id']);
     respond(200, ['deleted' => $device['user_id']]);
