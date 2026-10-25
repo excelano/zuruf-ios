@@ -103,7 +103,6 @@ struct ClipView: View {
     let clip: ReceivedClip
     @EnvironmentObject private var model: AppModel
     @ObservedObject private var player = ClipPlayer.shared
-    @ObservedObject private var transcripts = Transcripts.shared
 
     var body: some View {
         ScrollView {
@@ -112,10 +111,8 @@ struct ClipView: View {
                     .font(.headline)
                 Text(Duration.milliseconds(clip.durationMs), format: .time(pattern: .minuteSecond))
                     .foregroundStyle(.secondary)
-                if let transcript = transcripts.texts[clip.id], !transcript.isEmpty {
-                    Text(transcript)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
+                ClipTranscript(clipID: clip.id)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Button {
                     player.play(clipID: clip.id, attachment: nil, category: .playback)
                 } label: {

@@ -231,9 +231,11 @@ php "$server/cron.php" > /dev/null
 
 json POST /v1/admin/invites $admin '{}'
 carol_code=$(jq -r .code <<< "$body")
-json POST /v1/invites/redeem "" "{\"code\": \"$carol_code\", \"display_name\": \"Carol\"}"
+json POST /v1/invites/redeem "" "{\"code\": \"$carol_code\", \"display_name\": \"Zoe\"}"
 carol=$(jq -r .token <<< "$body")
 carol_id=$(jq -r .user_id <<< "$body")
+call GET /v1/contacts $alice
+check "the echo bot comes after everyone, Zoe included" '[.users[].display_name] == ["Bob", "Zoe", "Echo"]'
 call POST /v1/clips $carol -F "to_user=$alice_id" -F "audio=@$work/short.m4a"
 carol_clip=$(jq -r .id <<< "$body")
 call DELETE /v1/account $carol

@@ -149,7 +149,7 @@ function deleteAccount(array $device): never {
 function listContacts(array $device): never {
     echoBotId();
     $users = query(
-        'SELECT id, display_name, is_bot FROM users WHERE id <> ? ORDER BY display_name COLLATE NOCASE',
+        'SELECT id, display_name, is_bot FROM users WHERE id <> ? ORDER BY is_bot, display_name COLLATE NOCASE',
         [$device['user_id']]
     )->fetchAll();
     $groups = query(
