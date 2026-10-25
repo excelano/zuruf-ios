@@ -10,6 +10,7 @@ import WidgetKit
 struct ZurufWidgets: WidgetBundle {
     var body: some Widget {
         TalkWidget()
+        TalkToWidget()
     }
 }
 
@@ -47,6 +48,9 @@ struct TalkWidget: Widget {
 
 struct TalkWidgetView: View {
     let entry: TalkEntry
+    // Tells apart circles for different people, where the last-recipient
+    // circle shows only the microphone.
+    var showsInitials = false
     @Environment(\.widgetFamily) private var family
     @Environment(\.widgetRenderingMode) private var renderingMode
 
@@ -78,9 +82,16 @@ struct TalkWidgetView: View {
                 } else {
                     AccessoryWidgetBackground()
                 }
-                Image(systemName: "mic.fill")
-                    .font(.title3)
-                    .foregroundStyle(renderingMode == .fullColor ? Self.ink : .primary)
+                Group {
+                    if showsInitials, let recipient = entry.recipient {
+                        Text(recipient.initials)
+                            .font(.title3.bold())
+                    } else {
+                        Image(systemName: "mic.fill")
+                            .font(.title3)
+                    }
+                }
+                .foregroundStyle(renderingMode == .fullColor ? Self.ink : .primary)
             }
         }
     }

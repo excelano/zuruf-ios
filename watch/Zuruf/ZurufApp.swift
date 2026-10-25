@@ -5,6 +5,7 @@
 
 import SwiftUI
 import UserNotifications
+import WatchConnectivity
 import WatchKit
 
 @main
@@ -23,6 +24,11 @@ struct ZurufApp: App {
                 }
             }
             .environmentObject(model)
+            .onChange(of: model.clips) { _, clips in
+                if let clips {
+                    Transcripts.shared.update(for: clips)
+                }
+            }
             .onOpenURL { url in
                 if let recipient = TalkLink.recipient(from: url) {
                     model.talk(to: recipient)
@@ -53,6 +59,23 @@ final class AppDelegate: NSObject, WKApplicationDelegate, UNUserNotificationCent
         Task { @MainActor in
             AppModel.shared.outbox.send()
             await AppModel.shared.requestNotifications()
+        }
+    }
+
+    // Transcripts from the phone can arrive while the app is in the
+    // background; the task stays open until they are in.
+    func handle(_ backgroundTasks: Set<WKRefreshBackgroundTask>) {
+        for task in backgroundTasks {
+            guard let task = task as? WKWatchConnectivityRefreshBackgroundTask else {
+                task.setTaskCompletedWithSnapshot(false)
+                continue
+            }
+            Task {
+                while WCSession.default.hasContentPending {
+                    try? await Task.sleep(for: .milliseconds(200))
+                }
+                task.setTaskCompletedWithSnapshot(false)
+            }
         }
     }
 

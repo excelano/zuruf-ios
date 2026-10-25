@@ -93,7 +93,13 @@ final class AppModel: ObservableObject {
         AccountStore.delete()
         LastRecipient.clear()
         WidgetCenter.shared.reloadTimelines(ofKind: "Talk")
+        #if os(watchOS)
+        SavedRecipients.clear()
+        WidgetCenter.shared.reloadTimelines(ofKind: "TalkTo")
+        WidgetCenter.shared.invalidateConfigurationRecommendations()
+        #endif
         outbox.removeAll()
+        Transcripts.shared.removeAll()
         account = nil
         contacts = nil
         clips = nil
@@ -121,6 +127,7 @@ final class AppModel: ObservableObject {
             async let fetchedClips = api.clips()
             self.contacts = try await fetchedContacts
             self.clips = try await fetchedClips
+            saveRecipients()
             refreshError = nil
         } catch APIError.status(401, _) {
             // The account was deleted, most likely on the paired device, whose
@@ -144,6 +151,19 @@ final class AppModel: ObservableObject {
             LastRecipient.save(recipient)
             WidgetCenter.shared.reloadTimelines(ofKind: "Talk")
         }
+    }
+
+    // People and groups for the Talk to complication, bots left out.
+    private func saveRecipients() {
+        #if os(watchOS)
+        guard let contacts else { return }
+        let recipients = contacts.users.filter { !$0.isBot }.map { Recipient.person(id: $0.id, name: $0.displayName) }
+            + contacts.groups.map { Recipient.group(id: $0.id, name: $0.name) }
+        guard recipients != SavedRecipients.load() else { return }
+        SavedRecipients.save(recipients)
+        WidgetCenter.shared.reloadTimelines(ofKind: "TalkTo")
+        WidgetCenter.shared.invalidateConfigurationRecommendations()
+        #endif
     }
 
     func talk(to recipient: Recipient) {

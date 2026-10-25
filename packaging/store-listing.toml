@@ -28,7 +28,7 @@ SETTINGS
 The watch's Settings can turn automatic playback off, and the iPhone shows the same switch as Play automatically on watch. Delete account, on either device, erases the account and every clip to or from it on the server and signs both devices out.
 
 DATA
-The server keeps each account's display name, a hash of each device's sign-in token and its push token, and each clip with its sender, its recipients and when they played it. Clips are deleted seven days after they are sent. Apple's push service carries the sender's name and a clip identifier, never the audio. Transcripts are made and kept on the iPhone that shows them and are never uploaded. There is no analytics, advertising or tracking code. Privacy policy: https://zuruf.excelano.com/privacy. Source for the apps and the server: https://github.com/excelano/zuruf.
+The server keeps each account's display name, a hash of each device's sign-in token and its push token, and each clip with its sender, its recipients and when they played it. Clips are deleted seven days after they are sent. Apple's push service carries the sender's name and a clip identifier, never the audio. Transcripts are made on the iPhone, kept there and on its paired watch, and are never uploaded. There is no analytics, advertising or tracking code. Privacy policy: https://zuruf.excelano.com/privacy. Source for the apps and the server: https://github.com/excelano/zuruf.
 
 Questions about this review: David M. Anderson, david.anderson@excelano.com.
 """
@@ -42,7 +42,7 @@ Hold the yellow button, talk, and let go. A few seconds later your voice plays o
 
 Nobody has to pick up. A clip plays the moment its notification lands, the way a radio would. If their watch is on silent it waits behind a Play button instead, and Reply on the notification opens the talk button to answer.
 
-On iPhone, every person and group is a conversation you can read. Each clip is transcribed on the iPhone that shows it, yours as well as theirs, so the back-and-forth reads like a message thread, though the only way to send is still to speak. Transcripts are made on the phone and stay there. No watch? The iPhone app works on its own, with an alert for each clip.
+On iPhone, every person and group is a conversation you can read. Each clip is transcribed on the iPhone that shows it, yours as well as theirs, so the back-and-forth reads like a message thread, though the only way to send is still to speak. Transcripts are made on the phone and stay on it and your watch. No watch? The iPhone app works on its own, with an alert for each clip.
 
 Talk to one person or to a whole group, see who has heard yours, and mark a clip as read or delete it. Join once, on either device, and the other signs in by itself. A complication on the watch face keeps your last conversation one tap away. If the signal drops before you let go, the clip waits and sends when the connection comes back.
 

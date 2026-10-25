@@ -53,6 +53,7 @@ struct InboxView: View {
 
 private struct ReceivedRow: View {
     let clip: ReceivedClip
+    @ObservedObject private var transcripts = Transcripts.shared
 
     var body: some View {
         HStack {
@@ -65,6 +66,11 @@ private struct ReceivedRow: View {
                     Text(groupName)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                }
+                if let transcript = transcripts.texts[clip.id], !transcript.isEmpty {
+                    Text(transcript)
+                        .font(.footnote)
+                        .lineLimit(2)
                 }
                 Text(clip.createdAt, format: .relative(presentation: .named))
                     .font(.footnote)
@@ -97,25 +103,32 @@ struct ClipView: View {
     let clip: ReceivedClip
     @EnvironmentObject private var model: AppModel
     @ObservedObject private var player = ClipPlayer.shared
+    @ObservedObject private var transcripts = Transcripts.shared
 
     var body: some View {
-        VStack(spacing: 10) {
-            Text(clip.senderName)
-                .font(.headline)
-            Text(Duration.milliseconds(clip.durationMs), format: .time(pattern: .minuteSecond))
-                .foregroundStyle(.secondary)
-            Button {
-                player.play(clipID: clip.id, attachment: nil, category: .playback)
-            } label: {
-                Label(player.loadingClipID == clip.id ? "Loading…" : "Play", systemImage: "play.fill")
-            }
-            // Inbox and this view are pushed outside the talk path, so a
-            // value link would land beneath them; leave the inbox instead.
-            Button {
-                model.showInbox = false
-                model.talk(to: clip.replyRecipient)
-            } label: {
-                Label("Reply", systemImage: "mic.fill")
+        ScrollView {
+            VStack(spacing: 10) {
+                Text(clip.senderName)
+                    .font(.headline)
+                Text(Duration.milliseconds(clip.durationMs), format: .time(pattern: .minuteSecond))
+                    .foregroundStyle(.secondary)
+                if let transcript = transcripts.texts[clip.id], !transcript.isEmpty {
+                    Text(transcript)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                Button {
+                    player.play(clipID: clip.id, attachment: nil, category: .playback)
+                } label: {
+                    Label(player.loadingClipID == clip.id ? "Loading…" : "Play", systemImage: "play.fill")
+                }
+                // Inbox and this view are pushed outside the talk path, so a
+                // value link would land beneath them; leave the inbox instead.
+                Button {
+                    model.showInbox = false
+                    model.talk(to: clip.replyRecipient)
+                } label: {
+                    Label("Reply", systemImage: "mic.fill")
+                }
             }
         }
     }

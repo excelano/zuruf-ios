@@ -5,12 +5,16 @@
 
 import Foundation
 import WatchConnectivity
+#if os(iOS)
+import UIKit
+#endif
 
 // Keeps a paired watch and phone on one account and one "Play automatically"
 // setting. Whichever joins passes the account to the other, which signs in as
 // a device of its own; deleting the account on one signs the other out. The
 // application context holds only the latest of these, and reaches the other
-// app whenever it next runs.
+// app whenever it next runs. The phone also sends the watch its transcripts,
+// and makes one when the watch asks.
 @MainActor
 final class AccountLink: NSObject, ObservableObject, WCSessionDelegate {
     static let shared = AccountLink()
@@ -19,9 +23,14 @@ final class AccountLink: NSObject, ObservableObject, WCSessionDelegate {
     private static let signedOutKey = "signedOutUserID"
     private static let playAutomaticallyKey = "playAutomatically"
     private static let playAutomaticallyChangedAtKey = "playAutomaticallyChangedAt"
+    private nonisolated static let transcriptsKey = "transcripts"
+    private nonisolated static let transcribeKey = "transcribe"
+    private nonisolated static let transcriptKey = "transcript"
 
     // A phone paired with a watch that has Zuruf installed.
     @Published private(set) var hasWatch = false
+    // A watch whose phone has Zuruf installed and can be reached now.
+    @Published private(set) var canAskPhone = false
 
     func activate() {
         guard WCSession.isSupported(), !DemoMode.isActive else { return }
@@ -64,12 +73,16 @@ final class AccountLink: NSObject, ObservableObject, WCSessionDelegate {
         let context = session.receivedApplicationContext
         Task { @MainActor in
             updateHasWatch()
+            updateCanAskPhone()
             await receive(context)
             if let account = AppModel.shared.account {
                 share(account)
             } else {
                 update { _ in }
             }
+            #if os(iOS)
+            Transcripts.shared.shareAgainWithWatch()
+            #endif
         }
     }
 
@@ -101,6 +114,42 @@ final class AccountLink: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
 
+    #if os(watchOS)
+    nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
+        guard let texts = userInfo[Self.transcriptsKey] as? [String: String] else { return }
+        Task { @MainActor in Transcripts.shared.add(texts) }
+    }
+
+    nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
+        Task { @MainActor in updateCanAskPhone() }
+    }
+
+    nonisolated func sessionCompanionAppInstalledDidChange(_ session: WCSession) {
+        Task { @MainActor in updateCanAskPhone() }
+    }
+
+    // Asks the phone for a clip's transcript, which wakes the iPhone app.
+    func requestTranscript(of clipID: String) async -> String? {
+        let text: String? = await withCheckedContinuation { continuation in
+            WCSession.default.sendMessage([Self.transcribeKey: clipID]) { reply in
+                continuation.resume(returning: reply[Self.transcriptKey] as? String)
+            } errorHandler: { _ in
+                continuation.resume(returning: nil)
+            }
+        }
+        if let text {
+            Transcripts.shared.add([clipID: text])
+        }
+        return text
+    }
+    #endif
+
+    private func updateCanAskPhone() {
+        #if os(watchOS)
+        canAskPhone = WCSession.default.isCompanionAppInstalled && WCSession.default.isReachable
+        #endif
+    }
+
     private func updateHasWatch() {
         #if os(iOS)
         hasWatch = WCSession.default.isPaired && WCSession.default.isWatchAppInstalled
@@ -108,6 +157,32 @@ final class AccountLink: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     #if os(iOS)
+    // The watch asking for a transcript, from its notification. The phone may
+    // be in the background, so the work runs in a background task.
+    nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any],
+                             replyHandler: @escaping ([String: Any]) -> Void) {
+        guard let clipID = message[Self.transcribeKey] as? String else {
+            replyHandler([:])
+            return
+        }
+        Task { @MainActor in
+            let task = UIApplication.shared.beginBackgroundTask()
+            let text = await Transcripts.shared.transcript(of: clipID)
+            replyHandler(text.map { [Self.transcriptKey: $0] } ?? [:])
+            UIApplication.shared.endBackgroundTask(task)
+        }
+    }
+
+    // Replaces any batch still waiting to reach the watch, since each holds
+    // every transcript of a received clip.
+    func shareTranscripts(_ texts: [String: String]) {
+        guard WCSession.isSupported(), WCSession.default.activationState == .activated, hasWatch else { return }
+        for transfer in WCSession.default.outstandingUserInfoTransfers where transfer.userInfo[Self.transcriptsKey] != nil {
+            transfer.cancel()
+        }
+        WCSession.default.transferUserInfo([Self.transcriptsKey: texts])
+    }
+
     nonisolated func sessionDidBecomeInactive(_ session: WCSession) {}
 
     // Called when the phone switches to another paired watch.
@@ -121,6 +196,7 @@ final class AccountLink: NSObject, ObservableObject, WCSessionDelegate {
             if let account = AppModel.shared.account {
                 share(account)
             }
+            Transcripts.shared.shareAgainWithWatch()
         }
     }
     #endif
