@@ -37,6 +37,9 @@ struct SettingsView: View {
                 }
             }
             Section {
+                LabeledContent("Version", value: Self.version)
+            }
+            Section {
                 Button(isDeleting ? "Deleting…" : "Delete account", role: .destructive) {
                     confirmDelete = true
                 }
@@ -55,6 +58,12 @@ struct SettingsView: View {
             Text("Your account and every message you sent or received are deleted from the server. You will need a new invite to join again.")
         }
     }
+
+    // With the build number, which tells development builds apart.
+    private static let version: String = {
+        let info = Bundle.main.infoDictionary
+        return "\(info?["CFBundleShortVersionString"] as? String ?? "") (\(info?["CFBundleVersion"] as? String ?? ""))"
+    }()
 
     // Reads through @AppStorage so a change from the paired device shows at
     // once; writes go through AccountLink, which passes them on.
