@@ -24,7 +24,7 @@ Someone with a watch is alerted only on the watch. Their phone gets a background
 
 ## Building
 
-The identity a fork changes, meaning the team id, the App Store bundle id, the display name and the default server, lives in `watch/Config/Zuruf.xcconfig`, and the version in `watch/Config/Version.xcconfig`. The project's `Zuruf` scheme builds the iPhone app with the watch app embedded, which is how both reach the App Store on one record; `ZurufWatch` builds the watch app alone for installing on a watch during development. A watch app installed that way is not linked to the iPhone app, so account sharing needs the watch app installed from the iPhone's Watch app, which takes the copy embedded in the iPhone app.
+The identity a fork changes, meaning the team id, the App Store bundle id, the display name and the default server, lives in `watch/Config/Zuruf.xcconfig`, and the version in `watch/Config/Version.xcconfig`. The project's `Zuruf` scheme builds the iPhone app with the watch app embedded, which is how both reach the App Store on one record; `ZurufWatch` builds the watch app alone for installing on a watch during development. A watch app installed that way is not linked to the iPhone app, so account sharing, transcripts on the watch and Transcribe are tested from a TestFlight build. Don't install the watch app from a development iPhone build's embedded copy instead: the watch loses its complications that way, and it can keep running a stale build.
 
 ## The server
 
