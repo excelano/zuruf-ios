@@ -90,12 +90,21 @@ final class AppDelegate: NSObject, WKApplicationDelegate, UNUserNotificationCent
         return [.banner, .list, .sound]
     }
 
-    // Reply opens the sender's talk screen; a tap on the notification only
-    // opens the app.
+    // Reply opens the sender's talk screen, and the title strip opens the
+    // inbox, which has the clip at the top.
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse) async {
-        guard response.actionIdentifier == ClipNotification.replyAction,
-              let clipID = ClipNotification.clipID(in: response.notification.request.content) else { return }
-        await AppModel.shared.reply(toClip: clipID)
+        guard let clipID = ClipNotification.clipID(in: response.notification.request.content) else { return }
+        switch response.actionIdentifier {
+        case ClipNotification.replyAction:
+            await AppModel.shared.reply(toClip: clipID)
+        case UNNotificationDefaultActionIdentifier:
+            await MainActor.run {
+                AppModel.shared.talkPath = []
+                AppModel.shared.showInbox = true
+            }
+        default:
+            break
+        }
     }
 }
