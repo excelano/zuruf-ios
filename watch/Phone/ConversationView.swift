@@ -23,22 +23,33 @@ struct ConversationView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                ForEach(items) { item in
-                    switch item {
-                    case .received(let clip):
-                        ReceivedBubble(clip: clip, showsSender: isGroup)
-                    case .sent(let clip):
-                        SentBubble(clip: clip, isGroup: isGroup)
-                    }
-                }
-                ForEach(pending) { _ in
-                    PendingBubble()
+        List {
+            ForEach(items) { item in
+                switch item {
+                case .received(let clip):
+                    ReceivedBubble(clip: clip, showsSender: isGroup)
+                        .swipeActions {
+                            Button("Delete", systemImage: "trash", role: .destructive) {
+                                Task { await model.deleteClip(clip.id) }
+                            }
+                            if clip.playedAt == nil {
+                                Button("Mark as Read", systemImage: "envelope.open") {
+                                    Task { await model.markPlayed(clip.id) }
+                                }
+                                .tint(.accentColor)
+                            }
+                        }
+                case .sent(let clip):
+                    SentBubble(clip: clip, isGroup: isGroup)
                 }
             }
-            .padding()
+            .conversationRow()
+            ForEach(pending) { _ in
+                PendingBubble()
+            }
+            .conversationRow()
         }
+        .listStyle(.plain)
         .defaultScrollAnchor(.bottom)
         .overlay {
             if items.isEmpty && pending.isEmpty {
@@ -61,7 +72,6 @@ struct ConversationView: View {
 private struct ReceivedBubble: View {
     let clip: ReceivedClip
     let showsSender: Bool
-    @EnvironmentObject private var model: AppModel
     @ObservedObject private var transcripts = Transcripts.shared
 
     var body: some View {
@@ -100,16 +110,6 @@ private struct ReceivedBubble: View {
             }
             Spacer(minLength: 60)
         }
-        .contextMenu {
-            if clip.playedAt == nil {
-                Button("Mark as Read", systemImage: "envelope.open") {
-                    Task { await model.markPlayed(clip.id) }
-                }
-            }
-            Button("Delete", systemImage: "trash", role: .destructive) {
-                Task { await model.deleteClip(clip.id) }
-            }
-        }
     }
 }
 
@@ -127,12 +127,14 @@ private struct PlayButton: View {
             }
             .labelStyle(.iconOnly)
             .font(.title)
+            .buttonStyle(.borderless)
         } else {
             Button("Play", systemImage: "play.circle.fill") {
                 player.play(clipID: clipID, attachment: nil, category: .playback)
             }
             .labelStyle(.iconOnly)
             .font(.title)
+            .buttonStyle(.borderless)
         }
     }
 }
@@ -282,6 +284,15 @@ private struct TalkBar: View {
     private func release() {
         isPressed = false
         recorder.stop()
+    }
+}
+
+private extension View {
+    // Bubbles sit on the background with no separators, as in Messages.
+    func conversationRow() -> some View {
+        listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
     }
 }
 
