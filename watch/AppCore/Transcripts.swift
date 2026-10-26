@@ -4,10 +4,6 @@
 // Built with AI assistance (Claude, Anthropic)
 
 import Foundation
-#if os(iOS)
-import AVFoundation
-import Speech
-#endif
 
 // Transcripts of clips, keyed by clip. The phone makes them in its own
 // language, of sent and received clips, and sends those of received clips to
@@ -137,47 +133,10 @@ final class Transcripts: ObservableObject {
         defer { try? FileManager.default.removeItem(at: file) }
         do {
             try data.write(to: file)
-            return try await Self.transcribe(file)
+            return try await Transcriber.transcribe(file)
         } catch {
             return nil
         }
-    }
-
-    // SpeechTranscriber where the hardware and language have it, otherwise
-    // DictationTranscriber.
-    private nonisolated static func transcribe(_ file: URL) async throws -> String {
-        if SpeechTranscriber.isAvailable, let locale = await SpeechTranscriber.supportedLocale(equivalentTo: .current) {
-            let transcriber = SpeechTranscriber(locale: locale, preset: .transcription)
-            return try await analyze(file, with: transcriber) {
-                try await transcriber.results.reduce(into: []) { $0.append(String($1.text.characters)) }
-            }
-        }
-        guard let locale = await DictationTranscriber.supportedLocale(equivalentTo: .current) else {
-            throw CocoaError(.featureUnsupported)
-        }
-        let transcriber = DictationTranscriber(locale: locale, preset: .longDictation)
-        return try await analyze(file, with: transcriber) {
-            try await transcriber.results.reduce(into: []) { $0.append(String($1.text.characters)) }
-        }
-    }
-
-    private nonisolated static func analyze(_ file: URL, with module: any SpeechModule,
-                                            results: @escaping @Sendable () async throws -> [String]) async throws -> String {
-        if let request = try await AssetInventory.assetInstallationRequest(supporting: [module]) {
-            try await request.downloadAndInstall()
-        }
-        let analyzer = SpeechAnalyzer(modules: [module])
-        let collected = Task { try await results() }
-        let audio = try AVAudioFile(forReading: file)
-        if let end = try await analyzer.analyzeSequence(from: audio) {
-            try await analyzer.finalizeAndFinish(through: end)
-        } else {
-            await analyzer.cancelAndFinishNow()
-        }
-        return try await collected.value
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-            .joined(separator: " ")
     }
     #endif
 }
