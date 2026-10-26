@@ -22,35 +22,50 @@ struct ConversationView: View {
         if case .group = recipient { true } else { false }
     }
 
+    // The newest message, which the conversation keeps in view.
+    private var latestID: String? {
+        pending.last?.id.uuidString ?? items.last?.id
+    }
+
     var body: some View {
-        List {
-            ForEach(items) { item in
-                switch item {
-                case .received(let clip):
-                    ReceivedBubble(clip: clip, showsSender: isGroup)
-                        .swipeActions {
-                            Button("Delete", systemImage: "trash", role: .destructive) {
-                                Task { await model.deleteClip(clip.id) }
-                            }
-                            if clip.playedAt == nil {
-                                Button("Mark as Read", systemImage: "envelope.open") {
-                                    Task { await model.markPlayed(clip.id) }
+        ScrollViewReader { proxy in
+            List {
+                ForEach(items) { item in
+                    switch item {
+                    case .received(let clip):
+                        ReceivedBubble(clip: clip, showsSender: isGroup)
+                            .swipeActions {
+                                Button("Delete", systemImage: "trash", role: .destructive) {
+                                    Task { await model.deleteClip(clip.id) }
                                 }
-                                .tint(.accentColor)
+                                if clip.playedAt == nil {
+                                    Button("Mark as Read", systemImage: "envelope.open") {
+                                        Task { await model.markPlayed(clip.id) }
+                                    }
+                                    .tint(.accentColor)
+                                }
                             }
-                        }
-                case .sent(let clip):
-                    SentBubble(clip: clip, isGroup: isGroup)
+                    case .sent(let clip):
+                        SentBubble(clip: clip, isGroup: isGroup)
+                    }
                 }
+                .conversationRow()
+                ForEach(pending) { item in
+                    PendingBubble()
+                        .id(item.id.uuidString)
+                }
+                .conversationRow()
             }
-            .conversationRow()
-            ForEach(pending) { _ in
-                PendingBubble()
+            .listStyle(.plain)
+            .task {
+                // After the first layout pass, so the talk bar's inset is counted.
+                await Task.yield()
+                scrollToLatest(proxy)
             }
-            .conversationRow()
+            .onChange(of: latestID) {
+                withAnimation { scrollToLatest(proxy) }
+            }
         }
-        .listStyle(.plain)
-        .defaultScrollAnchor(.bottom)
         .overlay {
             if items.isEmpty && pending.isEmpty {
                 Text("No messages")
@@ -65,6 +80,12 @@ struct ConversationView: View {
         .navigationBarTitleDisplayMode(.inline)
         .refreshable {
             await model.refresh()
+        }
+    }
+
+    private func scrollToLatest(_ proxy: ScrollViewProxy) {
+        if let latestID {
+            proxy.scrollTo(latestID, anchor: .bottom)
         }
     }
 }
