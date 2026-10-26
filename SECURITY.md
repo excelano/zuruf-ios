@@ -2,13 +2,11 @@
 
 ## Reporting a vulnerability
 
-Please report suspected vulnerabilities privately through GitHub Security Advisories at https://github.com/excelano/zuruf/security/advisories/new. If you would rather not use GitHub, email david.anderson@excelano.com instead. I aim to respond within seven days.
-
-Please do not open public issues for security problems.
+Please report suspected vulnerabilities by email to david.anderson@excelano.com. I aim to respond within seven days.
 
 ## Supported versions
 
-The Zuruf server is built from source and self-hosted by each operator. Security fixes ship through `main`; pull and redeploy to apply them. There are no maintained release branches.
+Security fixes ship through `main` and are deployed to each server from there. There are no maintained release branches.
 
 ## Security model
 

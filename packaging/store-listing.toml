@@ -47,12 +47,10 @@ On iPhone, every person and group is a conversation you can read. Each clip is t
 Talk to one person or to a whole group, see who has heard yours, and mark a clip as read or delete it. Join once, on either device, and the other signs in by itself. Complications on the watch face keep your last conversation, and the people you talk to most, one tap away. If the signal drops before you let go, the clip waits and sends when the connection comes back.
 
 There is no sign-up and no directory of strangers. Zuruf connects to a private server, and an account on it comes only from an invite code handed out by the person who runs it. The only names you see are the people in your group. Clips go to that server and nowhere else, Apple's push service sees only who a clip is from, and each clip is deleted seven days after it was sent. The microphone is on only while you hold the button, and there are no ads, analytics or tracking.
-
-The apps and their server are published on GitHub under the MIT license, so every privacy claim above can be checked against the code.
 """
 
 [locales."en-us".apple]
 name = "Zuruf"
 subtitle = "Push to talk for small groups"
 promotional-text = "Hold, talk, let go. Seconds later your voice plays on their wrist, and your iPhone shows every clip as text. No sign-up, no strangers: invitation only."
-keywords = "voice,messages,ptt,intercom,radio,two-way,group,wrist,audio,talk,transcript,team,private,open source"
+keywords = "voice,messages,ptt,intercom,radio,two-way,group,wrist,audio,talk,transcript,team,private"

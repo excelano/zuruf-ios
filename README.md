@@ -4,7 +4,7 @@ Zuruf is a walkie-talkie for Apple Watch: hold a button, say something, and it p
 
 Messages are stored and forwarded rather than streamed. A device records a clip and uploads it, the server sends a push to everyone it is addressed to, and each watch downloads the clip and plays it as the notification arrives. Clips can go to one person or to a group, the sender sees who has played them, and the server deletes them after a set number of days.
 
-Zuruf is invite-only. An account comes from a single-use invite code that the server's operator creates, so an app build is useless without an invitation to a server. Push notifications reach only an app signed by the developer account that holds the APNs key, which is why a group that wants its own server also builds its own copy of the app.
+Zuruf is invite-only. An account comes from a single-use invite code that the server's operator creates, so an app build is useless without an invitation to a server. Push notifications reach only an app signed by the developer account that holds the APNs key.
 
 This repository holds the watch and iPhone apps, in `watch/`, and the server, in `server/`.
 
@@ -24,7 +24,7 @@ A clip's notification goes to the phone, and iOS shows it there while the phone 
 
 ## Building
 
-The identity a fork changes, meaning the team id, the App Store bundle id, the display name and the default server, lives in `watch/Config/Zuruf.xcconfig`, and the version in `watch/Config/Version.xcconfig`. The project's `Zuruf` scheme builds the iPhone app with the watch app embedded, which is how both reach the App Store on one record; `ZurufWatch` builds the watch app alone for installing on a watch during development.
+The app's identity, meaning the team id, the App Store bundle id, the display name and the default server, lives in `watch/Config/Zuruf.xcconfig`, and the version in `watch/Config/Version.xcconfig`. The project's `Zuruf` scheme builds the iPhone app with the watch app embedded, which is how both reach the App Store on one record; `ZurufWatch` builds the watch app alone for installing on a watch during development.
 
 ## The server
 
@@ -45,9 +45,9 @@ server/data/         The database and clip files, created on first request.
 
 Only `public/` is reachable from the web. Everything else sits beside it, so the configuration, keys, database and audio stay outside the web root without depending on rewrite rules.
 
-## Running your own
+## Running a server
 
-You need an Apple Developer account, and your own build of the apps with your identity in `Zuruf.xcconfig`. In Certificates, Identifiers & Profiles, enable Push Notifications on both App IDs, the watch app's and the iPhone app's, then create an APNs key for each app and each environment, restricted to that App ID's topic. Development builds installed from Xcode use the sandbox keys; TestFlight and App Store builds use the production keys. Apple lets you download each `.p8` file once.
+In Certificates, Identifiers & Profiles, enable Push Notifications on both App IDs, the watch app's and the iPhone app's, then create an APNs key for each app and each environment, restricted to that App ID's topic. Development builds installed from Xcode use the sandbox keys; TestFlight and App Store builds use the production keys. Apple lets you download each `.p8` file once.
 
 Point a hostname's document root at `server/public/` and upload the `server/` directory. If your host will not move a document root, upload the contents of `public/` into the document root it gave you and the rest of `server/` into a folder named `zuruf-server` beside it; `index.php` looks there when it finds no server beside itself. The server must sit at the root of its hostname, and it refuses plain HTTP. Copy `config.example.php` to `config.php`, fill in your team id, each app's bundle id and key ids under `APNS_APPS`, the watch app's under `watchos` and the iPhone app's under `ios`, and a long random admin token, and put the `.p8` files in `keys/`. Then add an hourly cron job:
 
@@ -69,7 +69,3 @@ curl -s -X POST https://zuruf.example.com/v1/admin/invites \
 ## Testing
 
 `server/tests/smoke.sh` runs the API end to end against PHP's built-in server with a throwaway database, and needs `curl`, `jq` and `ffmpeg` besides PHP. It does not send pushes; those are checked on a real watch and iPhone.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
