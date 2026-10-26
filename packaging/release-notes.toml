@@ -2,11 +2,9 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "0.3.1"
+version = "0.3.2"
 
 [locales."en-us"]
 whats-new = """
-Notifications now come to your iPhone, which shows them there while you're using it and passes them to your watch while it's locked, the way iPhone notifications always work. Each one arrives with its transcript, on the iPhone and on the watch.
-
-On the watch, transcripts from your iPhone show in the inbox and in notifications, and Transcribe asks the iPhone for one it hasn't made yet. A new Talk to complication opens the talk button for one person or group, and a notification's title opens the inbox. People and groups are listed together, latest conversation first, on both devices.
+A notification your iPhone passes to your watch has its Reply button again, and Reply opens the talk screen on the watch.
 """
