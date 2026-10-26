@@ -46,15 +46,8 @@ struct ZurufApp: App {
 
 final class AppDelegate: NSObject, WKApplicationDelegate, UNUserNotificationCenterDelegate {
     func applicationDidFinishLaunching() {
-        let center = UNUserNotificationCenter.current()
-        center.delegate = self
-        center.setNotificationCategories([
-            UNNotificationCategory(
-                identifier: ClipNotification.category,
-                actions: [UNNotificationAction(identifier: ClipNotification.replyAction, title: "Reply", options: [.foreground])],
-                intentIdentifiers: []
-            )
-        ])
+        UNUserNotificationCenter.current().delegate = self
+        ClipNotification.registerCategory()
         AccountLink.shared.activate()
         Task { @MainActor in
             AppModel.shared.outbox.send()

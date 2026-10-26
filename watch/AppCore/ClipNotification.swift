@@ -28,6 +28,18 @@ enum ClipNotification {
         UserDefaults.standard.set(changedAt, forKey: playAutomaticallyChangedAtKey)
     }
 
+    // Registered by both apps: the watch shows the phone app's actions on a
+    // notification the phone passes to it.
+    static func registerCategory() {
+        UNUserNotificationCenter.current().setNotificationCategories([
+            UNNotificationCategory(
+                identifier: category,
+                actions: [UNNotificationAction(identifier: replyAction, title: "Reply", options: [.foreground])],
+                intentIdentifiers: []
+            )
+        ])
+    }
+
     static func clipID(in content: UNNotificationContent) -> String? {
         guard let clipID = content.userInfo["clip_id"] as? String,
               content.userInfo["server_id"] as? String == AccountStore.load()?.serverID else {

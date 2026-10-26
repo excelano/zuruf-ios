@@ -55,6 +55,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         UNUserNotificationCenter.current().delegate = self
+        ClipNotification.registerCategory()
         // Saving again moves an account kept before the shared Keychain group
         // into it, where the notification service extension can read it.
         if let account = AccountStore.load() {
