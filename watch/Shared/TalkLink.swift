@@ -7,7 +7,7 @@ import Foundation
 
 // zuruf://talk?person=<id>&name=<name> opens the talk screen for a contact.
 enum TalkLink {
-    static func url(for recipient: Recipient) -> URL {
+    static func url(for recipient: Recipient) -> URL? {
         var components = URLComponents()
         components.scheme = "zuruf"
         components.host = "talk"
@@ -19,7 +19,7 @@ enum TalkLink {
             URLQueryItem(name: kind, value: id),
             URLQueryItem(name: "name", value: recipient.name),
         ]
-        return components.url!
+        return components.url
     }
 
     static func recipient(from url: URL) -> Recipient? {

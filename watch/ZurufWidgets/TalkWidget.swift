@@ -56,7 +56,7 @@ struct TalkWidgetView: View {
 
     var body: some View {
         content
-            .widgetURL(entry.recipient.map(TalkLink.url(for:)))
+            .widgetURL(entry.recipient.flatMap(TalkLink.url(for:)))
     }
 
     @ViewBuilder

@@ -7,4 +7,5 @@ version = "0.3.2"
 [locales."en-us"]
 whats-new = """
 A notification your iPhone passes to your watch has its Reply button again, and Reply opens the talk screen on the watch.
+The Talk to complication no longer crashes over and over in the background, which could drain the watch's battery.
 """

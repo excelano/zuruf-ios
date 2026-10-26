@@ -64,7 +64,7 @@ struct TalkToProvider: AppIntentTimelineProvider {
 
     // watchOS offers each recommendation as a complication of its own.
     func recommendations() -> [AppIntentRecommendation<TalkToIntent>] {
-        SavedRecipients.load().map { AppIntentRecommendation(intent: TalkToIntent($0), description: "Talk to \($0.name)") }
+        SavedRecipients.load().map { AppIntentRecommendation(intent: TalkToIntent($0), description: Text(verbatim: "Talk to \($0.name)")) }
     }
 
     // Looked up again so a renamed group shows its new name, and someone no
