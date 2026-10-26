@@ -75,9 +75,17 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     }
 
     // A notification woke the app: fetch the new clip and transcribe it before
-    // iOS suspends the app again.
+    // iOS suspends the app again. The completion handler form, because the
+    // async one hands the non-Sendable payload across actors.
     func application(_ application: UIApplication,
-                     didReceiveRemoteNotification userInfo: [AnyHashable: Any]) async -> UIBackgroundFetchResult {
+                     didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        Task {
+            completionHandler(await catchUp())
+        }
+    }
+
+    private func catchUp() async -> UIBackgroundFetchResult {
         await AppModel.shared.refresh()
         guard let clips = AppModel.shared.clips else { return .failed }
         clipsChanged(clips)
