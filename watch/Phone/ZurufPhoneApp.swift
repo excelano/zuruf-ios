@@ -42,15 +42,15 @@ struct ZurufPhoneApp: App {
 }
 
 // Transcribes new clips and sets the badge to the unplayed count, whether the
-// list changed in the app or from a background push.
+// list changed in the app or after a notification woke it.
 @MainActor
 private func clipsChanged(_ clips: ClipList) {
     Transcripts.shared.update(for: clips)
     UNUserNotificationCenter.current().setBadgeCount(clips.received.filter { $0.playedAt == nil }.count)
 }
 
-// A person with a watch is alerted there, and this phone gets a background
-// push; a person with only this phone gets the alert here.
+// Every clip's notification comes to this phone, which iOS shows here or
+// passes to the watch.
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
@@ -73,8 +73,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         Task { @MainActor in await AppModel.shared.apnsTokenReceived(token) }
     }
 
-    // A background push: fetch the new clip and transcribe it before iOS
-    // suspends the app again.
+    // A notification woke the app: fetch the new clip and transcribe it before
+    // iOS suspends the app again.
     func application(_ application: UIApplication,
                      didReceiveRemoteNotification userInfo: [AnyHashable: Any]) async -> UIBackgroundFetchResult {
         await AppModel.shared.refresh()

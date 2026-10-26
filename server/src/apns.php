@@ -55,13 +55,12 @@ function apnsJwt(array $key): ?string {
     return $jwt;
 }
 
-// $pushType is 'alert' or 'background'.
-function apnsSend(CurlHandle $handle, array $device, string $pushType, array $payload, int $expiresAt): void {
+function apnsSend(CurlHandle $handle, array $device, array $payload, int $expiresAt): void {
     $app = APNS_APPS[$device['platform']];
     $key = $app['keys'][$device['apns_env']];
     $jwt = $key['id'] === '' ? null : apnsJwt($key);
     if ($jwt === null) {
-        error_log("zuruf: no APNs {$device['platform']} {$device['apns_env']} key; $pushType push to device {$device['id']} skipped");
+        error_log("zuruf: no APNs {$device['platform']} {$device['apns_env']} key; push to device {$device['id']} skipped");
         return;
     }
     curl_setopt_array($handle, [
@@ -72,8 +71,8 @@ function apnsSend(CurlHandle $handle, array $device, string $pushType, array $pa
         CURLOPT_HTTPHEADER => [
             'authorization: bearer ' . $jwt,
             'apns-topic: ' . $app['topic'],
-            'apns-push-type: ' . $pushType,
-            'apns-priority: ' . ($pushType === 'alert' ? 10 : 5),
+            'apns-push-type: alert',
+            'apns-priority: 10',
             'apns-expiration: ' . $expiresAt,
         ],
         CURLOPT_RETURNTRANSFER => true,
@@ -118,50 +117,42 @@ function pushClip(array $clip): void {
         'clip_id' => $clip['id'],
         'server_id' => serverId(),
     ];
-    $background = ['aps' => ['content-available' => 1], 'clip_id' => $clip['id'], 'server_id' => serverId()];
 
     // APNs ties a connection to the first key used on it, so each key, which
     // is one per platform and environment, gets a connection of its own.
     $handles = [];
-    foreach (pushTargets($recipients) as [$device, $pushType]) {
+    foreach (pushTargets($recipients) as $device) {
         $handle = $handles[$device['platform'] . '/' . $device['apns_env']] ??= curl_init();
-        $payload = $pushType === 'alert' ? $alert : $background;
-        if ($pushType === 'alert' && $device['platform'] === 'ios') {
+        $payload = $alert;
+        // content-available also wakes the app, to refresh and transcribe.
+        if ($device['platform'] === 'ios') {
             $payload['aps']['badge'] = unplayedCount($device['user_id']);
             $payload['aps']['content-available'] = 1;
         }
-        apnsSend($handle, $device, $pushType, $payload, (int)$clip['expires_at']);
+        apnsSend($handle, $device, $payload, (int)$clip['expires_at']);
     }
     foreach ($handles as $handle) {
         curl_close($handle);
     }
 }
 
-// Someone with both a watch and a phone is alerted where their alerts setting
-// says. A phone left out of the alert gets a background push, so it can fetch
-// and transcribe the clip; a watch left out gets nothing. Someone with only
-// one kind of device is alerted there.
+// A phone gets the notification, and iOS shows it on the phone or passes it
+// to the watch. A watch gets it only when its owner has no phone.
 function pushTargets(array $userIds): array {
     $placeholders = implode(',', array_fill(0, count($userIds), '?'));
     $devices = query(
-        "SELECT d.id, d.user_id, d.platform, d.apns_token, d.apns_env, u.alerts FROM devices d
-         JOIN users u ON u.id = d.user_id
-         WHERE d.apns_token IS NOT NULL AND d.user_id IN ($placeholders)",
+        "SELECT id, user_id, platform, apns_token, apns_env FROM devices
+         WHERE apns_token IS NOT NULL AND user_id IN ($placeholders)",
         $userIds
     )->fetchAll();
-    $platforms = [];
+    $hasPhone = [];
     foreach ($devices as $device) {
-        $platforms[$device['user_id']][$device['platform']] = true;
-    }
-    $targets = [];
-    foreach ($devices as $device) {
-        $isWatch = $device['platform'] === 'watchos';
-        $hasOther = isset($platforms[$device['user_id']][$isWatch ? 'ios' : 'watchos']);
-        if (!$hasOther || $device['alerts'] === 'both' || $device['alerts'] === ($isWatch ? 'watch' : 'phone')) {
-            $targets[] = [$device, 'alert'];
-        } elseif (!$isWatch) {
-            $targets[] = [$device, 'background'];
+        if ($device['platform'] === 'ios') {
+            $hasPhone[$device['user_id']] = true;
         }
     }
-    return $targets;
+    return array_values(array_filter(
+        $devices,
+        fn($device) => $device['platform'] === 'ios' || !isset($hasPhone[$device['user_id']])
+    ));
 }
