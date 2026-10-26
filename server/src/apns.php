@@ -107,8 +107,8 @@ function pushClip(array $clip): void {
     $alert = [
         'aps' => [
             'alert' => [
-                'title' => $groupName ?? $sender,
-                'body' => $groupName === null ? "New message from $sender" : "New message from $sender in $groupName",
+                'title' => $groupName === null ? $sender : "$sender in $groupName",
+                'body' => 'New message',
             ],
             'sound' => 'default',
             'category' => 'clip',
@@ -125,7 +125,12 @@ function pushClip(array $clip): void {
     $handles = [];
     foreach (pushTargets($recipients) as [$device, $pushType]) {
         $handle = $handles[$device['platform'] . '/' . $device['apns_env']] ??= curl_init();
-        apnsSend($handle, $device, $pushType, $pushType === 'alert' ? $alert : $background, (int)$clip['expires_at']);
+        $payload = $pushType === 'alert' ? $alert : $background;
+        if ($pushType === 'alert' && $device['platform'] === 'ios') {
+            $payload['aps']['badge'] = unplayedCount($device['user_id']);
+            $payload['aps']['content-available'] = 1;
+        }
+        apnsSend($handle, $device, $pushType, $payload, (int)$clip['expires_at']);
     }
     foreach ($handles as $handle) {
         curl_close($handle);

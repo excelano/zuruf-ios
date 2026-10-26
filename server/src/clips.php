@@ -131,6 +131,18 @@ function clipJson(array $clip): array {
     ];
 }
 
+// The received clips listClips shows as unplayed, for a phone's badge.
+function unplayedCount(string $userId): int {
+    return (int)query(
+        'SELECT COUNT(*) FROM clips c
+         WHERE c.expires_at > :now AND c.sender_id <> :me
+           AND (c.recipient_user_id = :me OR c.group_id IN (SELECT group_id FROM group_members WHERE user_id = :me))
+           AND NOT EXISTS (SELECT 1 FROM clip_deletions d WHERE d.clip_id = c.id AND d.user_id = :me)
+           AND NOT EXISTS (SELECT 1 FROM clip_receipts r WHERE r.clip_id = c.id AND r.user_id = :me)',
+        ['me' => $userId, 'now' => time()]
+    )->fetchColumn();
+}
+
 function listClips(array $device): never {
     $me = $device['user_id'];
     $now = time();
