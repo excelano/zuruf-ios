@@ -183,15 +183,19 @@ function render() {
 
   $('invites').replaceChildren(...created.map((invite) => el('li', {},
     el('span', { class: 'code' }, invite.code),
-    el('span', { class: 'expires' }, 'until ' + when(invite.expires_at)),
+    el('span', { class: 'expires' }, (invite.for ? `links a device for ${invite.for}, ` : '') + 'until ' + when(invite.expires_at)),
     el('button', { class: 'quiet', type: 'button', onclick: (event) => copy(invite.code, event.currentTarget) }, 'Copy'),
   )));
 
   $('people').replaceChildren(...(people.length ? people.map((user) => el('li', {},
     el('span', { class: 'name' }, user.display_name),
     el('span', { class: 'detail' }, [ago(user.last_seen), groupsOf(user.id).join(', ')].filter(Boolean).join(' · ')),
-    el('span', { class: 'actions' }, deleteButton('Delete', `Delete ${user.display_name} and their messages?`,
-      () => act(() => api('DELETE', '/users/' + user.id), `Deleted ${user.display_name}.`))),
+    el('span', { class: 'actions' },
+      el('button', { class: 'quiet', type: 'button', onclick: () => act(async () => {
+        created.unshift({ ...await api('POST', `/users/${user.id}/link-codes`), for: user.display_name });
+      }) }, 'Link a device'),
+      deleteButton('Delete', `Delete ${user.display_name} and their messages?`,
+        () => act(() => api('DELETE', '/users/' + user.id), `Deleted ${user.display_name}.`))),
   )) : [el('li', { class: 'detail' }, 'Nobody has joined yet. Make an invite code above.')]));
 
   $('groups').replaceChildren(...state.groups.map((group) => {

@@ -21,13 +21,15 @@ function normalizeInviteCode(string $code): string {
     return preg_replace('/[^A-Z0-9]/', '', strtoupper($code));
 }
 
-function createInvite(int $ttlDays): array {
+// With $forUserId, the code is a link code, which adds a device to that
+// person's account, such as a computer, which cannot be signed in by a phone.
+function createInvite(int $ttlDays, ?string $forUserId = null): array {
     $code = newInviteCode();
     $now = time();
     $expiresAt = $now + $ttlDays * 86400;
     query(
-        'INSERT INTO invites (code_hash, created_at, expires_at) VALUES (?, ?, ?)',
-        [tokenHash($code), $now, $expiresAt]
+        'INSERT INTO invites (code_hash, created_at, expires_at, for_user_id) VALUES (?, ?, ?, ?)',
+        [tokenHash($code), $now, $expiresAt, $forUserId]
     );
     return ['code' => substr($code, 0, 5) . '-' . substr($code, 5), 'expires_at' => $expiresAt];
 }
@@ -39,16 +41,21 @@ function isReviewCode(string $code): bool {
 function redeemInvite(array $body): never {
     $code = normalizeInviteCode((string)($body['code'] ?? ''));
     $codeHash = tokenHash($code);
-    $name = textField($body, 'display_name', 40);
+    $linkedUserId = query('SELECT for_user_id FROM invites WHERE code_hash = ?', [$codeHash])->fetchColumn() ?: null;
+    $name = $linkedUserId === null
+        ? textField($body, 'display_name', 40)
+        : query('SELECT display_name FROM users WHERE id = ?', [$linkedUserId])->fetchColumn();
     $now = time();
-    $userId = randomId();
+    $userId = $linkedUserId ?? randomId();
     $deviceId = randomId();
     $token = bin2hex(random_bytes(32));
 
     $db = getDb();
     $db->beginTransaction();
-    query('INSERT INTO users (id, display_name, created_at) VALUES (?, ?, ?)', [$userId, $name, $now]);
-    $claimed = isReviewCode($code) || query(
+    if ($linkedUserId === null) {
+        query('INSERT INTO users (id, display_name, created_at) VALUES (?, ?, ?)', [$userId, $name, $now]);
+    }
+    $claimed = ($linkedUserId === null && isReviewCode($code)) || query(
         'UPDATE invites SET redeemed_by = ?, redeemed_at = ? WHERE code_hash = ? AND redeemed_at IS NULL AND expires_at > ?',
         [$userId, $now, $codeHash, $now]
     )->rowCount() === 1;
@@ -64,6 +71,7 @@ function redeemInvite(array $body): never {
 
     respond(201, [
         'user_id' => $userId,
+        'display_name' => $name,
         'device_id' => $deviceId,
         'token' => $token,
         'server_id' => serverId(),

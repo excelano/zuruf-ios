@@ -17,6 +17,7 @@ const MIGRATIONS = [
     "ALTER TABLE devices ADD COLUMN platform TEXT NOT NULL DEFAULT 'watchos' CHECK (platform IN ('watchos', 'ios'))",
     "ALTER TABLE users ADD COLUMN alerts TEXT NOT NULL DEFAULT 'watch' CHECK (alerts IN ('watch', 'phone', 'both'))",
     'ALTER TABLE users DROP COLUMN alerts',
+    'ALTER TABLE invites ADD COLUMN for_user_id TEXT REFERENCES users(id) ON DELETE CASCADE',
 ];
 
 function getDb(): PDO {

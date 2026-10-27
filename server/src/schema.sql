@@ -25,12 +25,15 @@ CREATE TABLE devices (
     updated_at     INTEGER NOT NULL
 );
 
+-- An invite with for_user_id is a link code: it adds a device to that
+-- person's account instead of making a new one.
 CREATE TABLE invites (
     code_hash   TEXT PRIMARY KEY,
     created_at  INTEGER NOT NULL,
     expires_at  INTEGER NOT NULL,
     redeemed_by TEXT REFERENCES users(id) ON DELETE SET NULL,
-    redeemed_at INTEGER
+    redeemed_at INTEGER,
+    for_user_id TEXT REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE groups (

@@ -55,7 +55,7 @@ Point a hostname's document root at `server/public/` and upload the `server/` di
 php /path/to/server/cron.php
 ```
 
-The server is managed from its admin page, at `/admin` on the server's own address, in any browser on a computer or a phone. It signs in with the admin token and makes invite codes, lists who has joined and when each device last opened the app, creates, renames and deletes groups, adds and removes members, and deletes people along with every message sent by or to them. An invite code is shown once, when it is made, because the server keeps only its hash. Changes reach each device the next time Zuruf refreshes its contacts, such as when it is opened.
+The server is managed from its admin page, at `/admin` on the server's own address, in any browser on a computer or a phone. It signs in with the admin token and makes invite codes, lists who has joined and when each device last opened the app, creates, renames and deletes groups, adds and removes members, and deletes people along with every message sent by or to them. Link a device makes a one-day code that adds a device to an existing person's account instead of making a new one, for a computer that no phone or watch can sign in. An invite or link code is shown once, when it is made, because the server keeps only its hash. Changes reach each device the next time Zuruf refreshes its contacts, such as when it is opened.
 
 The page is a client of the server's `/v1/admin` API, which takes the same token as a bearer token and can be scripted directly:
 
@@ -64,7 +64,7 @@ curl -s -X POST https://zuruf.example.com/v1/admin/invites \
   -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' -d '{}'
 ```
 
-`GET /v1/admin/users` returns everyone and every group, `/v1/admin/groups` creates a group, `PATCH` and `DELETE` on `/v1/admin/groups/{id}` rename and delete one, `/v1/admin/groups/{id}/members` adds a member, and `DELETE /v1/admin/users/{id}` removes a person. The built-in Echo contact sends back any clip it receives, which makes it the quickest check that recording, upload, push and playback all work. Set `ECHO_BOT_ENABLED` to false to hide it.
+`GET /v1/admin/users` returns everyone and every group, `/v1/admin/groups` creates a group, `PATCH` and `DELETE` on `/v1/admin/groups/{id}` rename and delete one, `/v1/admin/groups/{id}/members` adds a member, and `DELETE /v1/admin/users/{id}` removes a person, and `POST /v1/admin/users/{id}/link-codes` makes a link code for them. The built-in Echo contact sends back any clip it receives, which makes it the quickest check that recording, upload, push and playback all work. Set `ECHO_BOT_ENABLED` to false to hide it.
 
 ## Testing
 

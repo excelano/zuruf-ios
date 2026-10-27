@@ -92,6 +92,22 @@ bob=$(jq -r .token <<< "$body")
 bob_id=$(jq -r .user_id <<< "$body")
 bob_device=$(jq -r .device_id <<< "$body")
 
+json POST /v1/admin/users/$bob_id/link-codes "" "{}"
+expect 401 "link codes require the admin token"
+json POST /v1/admin/users/$(printf '0%.0s' {1..32})/link-codes $admin "{}"
+expect 404 "no link code for an unknown person"
+json POST /v1/admin/users/$bob_id/link-codes $admin "{}"
+expect 201 "create a link code for Bob"
+link_code=$(jq -r .code <<< "$body")
+json POST /v1/invites/redeem "" "{\"code\": \"$link_code\"}"
+expect 201 "a link code redeems without a display name"
+check "the link code adds a device to Bob's account" ".user_id == \"$bob_id\" and .display_name == \"Bob\" and .device_id != \"$bob_device\""
+bob_computer=$(jq -r .token <<< "$body")
+json POST /v1/invites/redeem "" "{\"code\": \"$link_code\"}"
+expect 403 "a link code is single-use"
+call GET /v1/contacts $bob_computer
+check "the linked computer is signed in as Bob" "[.users[].id] | index(\"$bob_id\") == null"
+
 call GET /v1/contacts ""
 expect 401 "contacts require a token"
 call GET /v1/contacts bogus-token

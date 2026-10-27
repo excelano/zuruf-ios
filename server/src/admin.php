@@ -5,12 +5,21 @@
 
 declare(strict_types=1);
 
+const LINK_CODE_TTL_DAYS = 1;
+
 function adminCreateInvite(array $body): never {
     $days = (int)($body['expires_days'] ?? INVITE_TTL_DAYS);
     if ($days < 1 || $days > 30) {
         fail(422, 'invalid_expires_days');
     }
     respond(201, createInvite($days));
+}
+
+function adminCreateLinkCode(string $userId): never {
+    if (!query('SELECT 1 FROM users WHERE id = ? AND is_bot = 0', [$userId])->fetch()) {
+        fail(404, 'not_found');
+    }
+    respond(201, createInvite(LINK_CODE_TTL_DAYS, $userId));
 }
 
 function adminListUsers(): never {

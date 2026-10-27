@@ -39,6 +39,7 @@ $routes = [
     ['POST', '/v1/admin/invites', function () { requireAdmin(); adminCreateInvite(jsonBody()); }],
     ['GET', '/v1/admin/users', function () { requireAdmin(); adminListUsers(); }],
     ['DELETE', "/v1/admin/users/$id", function ($userId) { requireAdmin(); adminDeleteUser($userId); }],
+    ['POST', "/v1/admin/users/$id/link-codes", function ($userId) { requireAdmin(); adminCreateLinkCode($userId); }],
     ['POST', '/v1/admin/groups', function () { requireAdmin(); adminCreateGroup(jsonBody()); }],
     ['PATCH', "/v1/admin/groups/$id", function ($groupId) { requireAdmin(); adminRenameGroup($groupId, jsonBody()); }],
     ['DELETE', "/v1/admin/groups/$id", function ($groupId) { requireAdmin(); adminDeleteGroup($groupId); }],
