@@ -47,8 +47,8 @@ define('UPLOADS_PER_MINUTE', 10);
 // for a demo server such as the one App Review uses. Leave empty everywhere else.
 define('REVIEW_INVITE_CODE', '');
 
-// A built-in contact that sends every clip it receives back to its sender.
-define('ECHO_BOT_ENABLED', true);
+// How long Echo, the built-in contact that sends every clip back to its sender,
+// waits before replying. The admin page shows or hides Echo.
 define('ECHO_DELAY_SECONDS', 3);
 
 // Refuse plain HTTP. Turn off only for local testing.

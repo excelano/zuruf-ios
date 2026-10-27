@@ -248,6 +248,23 @@ expect 401 "deleted account's token stops working"
 call GET /v1/contacts $alice
 check "deleted account leaves the contact list" "[.users[].id] | index(\"$carol_id\") == null"
 
+json PUT /v1/admin/echo "" '{"shown": false}'
+expect 401 "hiding Echo requires the admin token"
+json PUT /v1/admin/echo $admin '{"shown": "no"}'
+expect 422 "shown must be true or false"
+json PUT /v1/admin/echo $admin '{"shown": false}'
+expect 200 "hide Echo"
+call GET /v1/contacts $alice
+check "a hidden Echo leaves the contact list" '[.users[].display_name] == ["Bob"]'
+call GET /v1/clips $alice
+check "hiding Echo deletes its messages" '.received | all(.sender_name != "Echo")'
+call POST /v1/clips $alice -F "to_user=$echo_id" -F "audio=@$work/short.m4a"
+expect 404 "a hidden Echo takes no clips"
+json PUT /v1/admin/echo $admin '{"shown": true}'
+expect 200 "show Echo"
+call GET /v1/contacts $alice
+check "a shown Echo is back in the contact list" '[.users[].display_name] == ["Bob", "Echo"]'
+
 call DELETE "/v1/admin/groups/$group/members/$bob_id" $admin
 expect 200 "remove group member"
 json PATCH "/v1/admin/groups/$group" $admin '{"name": "Crew"}'

@@ -22,6 +22,5 @@ define('CLIP_TTL_DAYS', 7);
 define('INVITE_TTL_DAYS', 7);
 define('REVIEW_INVITE_CODE', getenv('ZURUF_REVIEW_CODE') ?: '');
 define('UPLOADS_PER_MINUTE', 10);
-define('ECHO_BOT_ENABLED', true);
 define('ECHO_DELAY_SECONDS', 1);
 define('REQUIRE_HTTPS', false);

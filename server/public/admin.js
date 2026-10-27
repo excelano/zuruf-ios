@@ -178,6 +178,7 @@ function deleteButton(label, question, work) {
 
 function render() {
   const people = state.users.filter((user) => !user.is_bot);
+  const echoShown = state.users.some((user) => user.is_bot);
   const nameOf = new Map(state.users.map((user) => [user.id, user.display_name]));
   const groupsOf = (id) => state.groups.filter((group) => group.member_ids.includes(id)).map((group) => group.name);
 
@@ -219,6 +220,9 @@ function render() {
       act(() => api('POST', `/groups/${group.id}/members`, { user_id: picker.value })));
     return el('div', { class: 'group' }, head, members, picker);
   }));
+
+  $('echo').textContent = echoShown ? 'Hide Echo' : 'Show Echo';
+  $('echo').onclick = () => act(() => api('PUT', '/echo', { shown: !echoShown }), echoShown ? 'Echo is hidden.' : 'Echo is shown.');
 }
 
 function rename(group, head) {

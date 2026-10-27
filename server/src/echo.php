@@ -6,7 +6,7 @@
 declare(strict_types=1);
 
 function echoBotId(): ?string {
-    if (!ECHO_BOT_ENABLED) {
+    if (getSetting('echo_bot_hidden') === '1') {
         return null;
     }
     $id = getSetting('echo_bot_user_id');
@@ -17,6 +17,15 @@ function echoBotId(): ?string {
     query('INSERT INTO users (id, display_name, is_bot, created_at) VALUES (?, ?, 1, ?)', [$id, 'Echo', time()]);
     setSetting('echo_bot_user_id', $id);
     return $id;
+}
+
+// Hiding Echo deletes it, with its conversations; showing it makes a new one.
+function setEchoBotShown(bool $shown): void {
+    setSetting('echo_bot_hidden', $shown ? '0' : '1');
+    $id = getSetting('echo_bot_user_id');
+    if (!$shown && $id !== null) {
+        deleteUser($id);
+    }
 }
 
 // Runs after the sender's upload response has been sent.

@@ -23,6 +23,7 @@ function adminCreateLinkCode(string $userId): never {
 }
 
 function adminListUsers(): never {
+    echoBotId();
     $users = query(
         'SELECT u.id, u.display_name, u.is_bot, u.created_at, COUNT(d.id) AS devices, MAX(d.updated_at) AS last_seen
          FROM users u LEFT JOIN devices d ON d.user_id = u.id
@@ -35,6 +36,14 @@ function adminListUsers(): never {
     }
     unset($group);
     respond(200, ['users' => $users, 'groups' => $groups]);
+}
+
+function adminSetEchoBot(array $body): never {
+    if (!is_bool($body['shown'] ?? null)) {
+        fail(422, 'invalid_shown');
+    }
+    setEchoBotShown($body['shown']);
+    respond(200, ['shown' => $body['shown']]);
 }
 
 function adminDeleteUser(string $userId): never {
