@@ -112,7 +112,6 @@ struct ClipView: View {
                 Text(Duration.milliseconds(clip.durationMs), format: .time(pattern: .minuteSecond))
                     .foregroundStyle(.secondary)
                 ClipTranscript(clipID: clip.id)
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 Button {
                     player.play(clipID: clip.id, attachment: nil, category: .playback)
                 } label: {

@@ -22,6 +22,7 @@ struct ClipTranscript: View {
         if let transcript = transcripts.texts[clipID] {
             if !transcript.isEmpty {
                 Text(transcript)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         } else if link.canAskPhone {
             Button {
