@@ -2,11 +2,10 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "0.3.2"
+version = "0.3.3"
 
 [locales."en-us"]
 whats-new = """
-A notification your iPhone passes to your watch has its Reply button again, and Reply opens the talk screen on the watch.
-The Talk to complication no longer crashes over and over in the background, which could drain the watch's battery.
-On iPhone, swipe a clip to mark it as read or delete it, as on the watch.
+Transcripts spell names right more often: the admin page of your server can list names and words for transcribing to expect, such as a name that sounds like a common word.
+On the watch, the Transcribe button lines up with Play and Reply.
 """

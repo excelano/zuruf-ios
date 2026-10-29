@@ -31,8 +31,7 @@ final class NotificationService: UNNotificationServiceExtension {
                 let file = FileManager.default.temporaryDirectory.appending(path: "\(clipID).m4a")
                 defer { try? FileManager.default.removeItem(at: file) }
                 if (try? data.write(to: file)) != nil,
-                   let text = try? await Transcriber.transcribe(file, expecting: await contacts?.transcriptionWords ?? []),
-                   !text.isEmpty,
+                   let text = try? await Transcriber.transcribe(file, for: await contacts), !text.isEmpty,
                    !Task.isCancelled {
                     content.body = text
                 }

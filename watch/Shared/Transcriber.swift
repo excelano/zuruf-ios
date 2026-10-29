@@ -9,11 +9,14 @@ import Speech
 
 // Transcribes an audio file on this iPhone in its own language.
 enum Transcriber {
-    // SpeechTranscriber where the hardware and language have it, otherwise
-    // DictationTranscriber. Words, such as names, are favored over others
-    // that sound like them.
-    static func transcribe(_ file: URL, expecting words: [String]) async throws -> String {
-        if SpeechTranscriber.isAvailable, let locale = await SpeechTranscriber.supportedLocale(equivalentTo: .current) {
+    // SpeechTranscriber where the hardware and language have it and the server
+    // has no words to recognize, otherwise DictationTranscriber, the only one
+    // of the two that favors the contacts' words over others that sound like
+    // them.
+    static func transcribe(_ file: URL, for contacts: Contacts?) async throws -> String {
+        let words = contacts?.transcriptionWords ?? []
+        if contacts?.vocabulary?.isEmpty ?? true, SpeechTranscriber.isAvailable,
+           let locale = await SpeechTranscriber.supportedLocale(equivalentTo: .current) {
             let transcriber = SpeechTranscriber(locale: locale, preset: .transcription)
             return try await analyze(file, with: transcriber, expecting: words) {
                 try await transcriber.results.reduce(into: []) { $0.append(String($1.text.characters)) }
