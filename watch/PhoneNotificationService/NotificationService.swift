@@ -25,11 +25,14 @@ final class NotificationService: UNNotificationServiceExtension {
         self.content = content
 
         transcription = Task {
-            if let data = try? await ZurufAPI(account: account).audio(clipID: clipID) {
+            let api = ZurufAPI(account: account)
+            async let contacts = try? api.contacts()
+            if let data = try? await api.audio(clipID: clipID) {
                 let file = FileManager.default.temporaryDirectory.appending(path: "\(clipID).m4a")
                 defer { try? FileManager.default.removeItem(at: file) }
                 if (try? data.write(to: file)) != nil,
-                   let text = try? await Transcriber.transcribe(file), !text.isEmpty,
+                   let text = try? await Transcriber.transcribe(file, expecting: await contacts?.transcriptionWords ?? []),
+                   !text.isEmpty,
                    !Task.isCancelled {
                     content.body = text
                 }

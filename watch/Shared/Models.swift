@@ -20,6 +20,13 @@ struct TalkGroup: Decodable, Identifiable, Hashable {
 struct Contacts: Decodable {
     let users: [Person]
     let groups: [TalkGroup]
+    var vocabulary: [String]?
+
+    // What transcribing should expect: everyone's names, the groups' and the
+    // server's words to recognize.
+    var transcriptionWords: [String] {
+        users.filter { !$0.isBot }.map(\.displayName) + groups.map(\.name) + (vocabulary ?? [])
+    }
 
     func name(ofUser id: String) -> String? {
         users.first { $0.id == id }?.displayName

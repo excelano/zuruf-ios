@@ -133,7 +133,7 @@ final class Transcripts: ObservableObject {
         defer { try? FileManager.default.removeItem(at: file) }
         do {
             try data.write(to: file)
-            return try await Transcriber.transcribe(file)
+            return try await Transcriber.transcribe(file, expecting: AppModel.shared.contacts?.transcriptionWords ?? [])
         } catch {
             return nil
         }

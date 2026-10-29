@@ -265,6 +265,21 @@ expect 200 "show Echo"
 call GET /v1/contacts $alice
 check "a shown Echo is back in the contact list" '[.users[].display_name] == ["Bob", "Echo"]'
 
+check "no words to recognize until the admin sets some" '.vocabulary == []'
+json PUT /v1/admin/vocabulary "" '{"words": ["Reid"]}'
+expect 401 "words to recognize require the admin token"
+json PUT /v1/admin/vocabulary $admin '{"words": "Reid"}'
+expect 422 "words to recognize are a list"
+json PUT /v1/admin/vocabulary $admin '{"words": ["Reid", ["Reed"]]}'
+expect 422 "each word to recognize is text"
+json PUT /v1/admin/vocabulary $admin '{"words": [" Reid ", "Reid", "Zuruf"]}'
+expect 200 "set words to recognize"
+check "words to recognize are trimmed and listed once" '.vocabulary == ["Reid", "Zuruf"]'
+call GET /v1/contacts $alice
+check "contacts carry the words to recognize" '.vocabulary == ["Reid", "Zuruf"]'
+call GET /v1/admin/users $admin
+check "the admin list carries the words to recognize" '.vocabulary == ["Reid", "Zuruf"]'
+
 call DELETE "/v1/admin/groups/$group/members/$bob_id" $admin
 expect 200 "remove group member"
 json PATCH "/v1/admin/groups/$group" $admin '{"name": "Crew"}'

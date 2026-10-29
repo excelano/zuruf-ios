@@ -9,11 +9,12 @@ const errors = {
   unauthorized: 'That admin token was not accepted.',
   not_found: 'That no longer exists. The list has been refreshed.',
   invalid_name: 'A group name is 1 to 40 characters on one line.',
+  invalid_words: 'Words to recognize are up to 50, each up to 40 characters.',
   https_required: 'The server only answers over HTTPS.',
 };
 
 let token = null;
-let state = { users: [], groups: [] };
+let state = { users: [], groups: [], vocabulary: [] };
 const created = [];
 
 const $ = (id) => document.getElementById(id);
@@ -221,6 +222,8 @@ function render() {
     return el('div', { class: 'group' }, head, members, picker);
   }));
 
+  $('vocabulary').value = state.vocabulary.join(', ');
+
   $('echo').textContent = echoShown ? 'Hide Echo' : 'Show Echo';
   $('echo').onclick = () => act(() => api('PUT', '/echo', { shown: !echoShown }), echoShown ? 'Echo is hidden.' : 'Echo is shown.');
 }
@@ -271,6 +274,12 @@ $('group-form').addEventListener('submit', (event) => {
     await api('POST', '/groups', { name });
     $('group-name').value = '';
   }, `Created ${name.trim()}.`);
+});
+
+$('vocabulary-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const words = $('vocabulary').value.split(',').map((word) => word.trim()).filter(Boolean);
+  act(() => api('PUT', '/vocabulary', { words }), 'Saved the words to recognize.');
 });
 
 const saved = savedToken();

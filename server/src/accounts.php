@@ -160,5 +160,12 @@ function listContacts(array $device): never {
             'is_bot' => (bool)$u['is_bot'],
         ], $users),
         'groups' => $groups,
+        'vocabulary' => vocabulary(),
     ]);
+}
+
+// Words the devices should expect when they transcribe, such as a name that
+// sounds like a common word.
+function vocabulary(): array {
+    return json_decode(getSetting('vocabulary') ?? '[]', true);
 }

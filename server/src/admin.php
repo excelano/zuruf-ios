@@ -6,6 +6,7 @@
 declare(strict_types=1);
 
 const LINK_CODE_TTL_DAYS = 1;
+const VOCABULARY_MAX_WORDS = 50;
 
 function adminCreateInvite(array $body): never {
     $days = (int)($body['expires_days'] ?? INVITE_TTL_DAYS);
@@ -35,7 +36,7 @@ function adminListUsers(): never {
             ->fetchAll(PDO::FETCH_COLUMN);
     }
     unset($group);
-    respond(200, ['users' => $users, 'groups' => $groups]);
+    respond(200, ['users' => $users, 'groups' => $groups, 'vocabulary' => vocabulary()]);
 }
 
 function adminSetEchoBot(array $body): never {
@@ -44,6 +45,22 @@ function adminSetEchoBot(array $body): never {
     }
     setEchoBotShown($body['shown']);
     respond(200, ['shown' => $body['shown']]);
+}
+
+function adminSetVocabulary(array $body): never {
+    $words = $body['words'] ?? null;
+    if (!is_array($words) || !array_is_list($words) || count($words) > VOCABULARY_MAX_WORDS) {
+        fail(422, 'invalid_words');
+    }
+    $words = array_map(fn($word) => is_string($word) ? trim($word) : '', $words);
+    foreach ($words as $word) {
+        if (!preg_match('/^[^\p{C}]{1,40}$/u', $word)) {
+            fail(422, 'invalid_words');
+        }
+    }
+    $words = array_values(array_unique($words));
+    setSetting('vocabulary', json_encode($words));
+    respond(200, ['vocabulary' => $words]);
 }
 
 function adminDeleteUser(string $userId): never {
