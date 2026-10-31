@@ -17,16 +17,23 @@ struct ZurufWidgets: WidgetBundle {
 struct TalkEntry: TimelineEntry {
     let date: Date
     let recipient: Recipient?
+    // The face editor's gallery shows the last-recipient widget as itself, not
+    // as whoever was last, which would look like that person's Talk to widget.
+    var isLastRecipientPreview = false
 }
 
 // The app reloads this timeline whenever it sends a clip to someone new.
 struct TalkProvider: TimelineProvider {
     func placeholder(in context: Context) -> TalkEntry {
-        TalkEntry(date: .now, recipient: nil)
+        TalkEntry(date: .now, recipient: nil, isLastRecipientPreview: true)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (TalkEntry) -> Void) {
-        completion(TalkEntry(date: .now, recipient: LastRecipient.load()))
+        if context.isPreview {
+            completion(placeholder(in: context))
+        } else {
+            completion(TalkEntry(date: .now, recipient: LastRecipient.load()))
+        }
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<TalkEntry>) -> Void) {
@@ -65,16 +72,16 @@ struct TalkWidgetView: View {
         case .accessoryCorner:
             Image(systemName: "mic.fill")
                 .font(.title2)
-                .widgetLabel(entry.recipient?.name ?? "Zuruf")
+                .widgetLabel(entry.isLastRecipientPreview ? "Last person" : entry.recipient?.name ?? "Zuruf")
         case .accessoryRectangular:
             VStack(alignment: .leading) {
                 Label("Zuruf", systemImage: "mic.fill")
                     .font(.headline)
-                Text(entry.recipient.map { "Talk to \($0.name)" } ?? "Open to talk")
+                Text(talkTo ?? "Open to talk")
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         case .accessoryInline:
-            Label(entry.recipient.map { "Talk to \($0.name)" } ?? "Zuruf", systemImage: "mic.fill")
+            Label(talkTo ?? "Zuruf", systemImage: "mic.fill")
         default:
             ZStack {
                 if renderingMode == .fullColor {
@@ -94,6 +101,10 @@ struct TalkWidgetView: View {
                 .foregroundStyle(renderingMode == .fullColor ? Self.ink : .primary)
             }
         }
+    }
+
+    private var talkTo: String? {
+        entry.isLastRecipientPreview ? "Talk to last person" : entry.recipient.map { "Talk to \($0.name)" }
     }
 
     // The app icon's colors.
