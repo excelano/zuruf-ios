@@ -650,16 +650,17 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "$(ZURUF_DISPLAY_NAME)";
 				INFOPLIST_FILE = "Config/Phone-Info.plist";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Zuruf records the messages you send while you hold the talk button.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Zuruf transcribes the messages you receive on this iPhone, and keeps the text only here.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Zuruf transcribes the messages you receive on this device, and keeps the text only here.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				SWIFT_VERSION = 5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(ZURUF_CONTAINER_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -675,16 +676,17 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "$(ZURUF_DISPLAY_NAME)";
 				INFOPLIST_FILE = "Config/Phone-Info.plist";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Zuruf records the messages you send while you hold the talk button.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Zuruf transcribes the messages you receive on this iPhone, and keeps the text only here.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Zuruf transcribes the messages you receive on this device, and keeps the text only here.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				SWIFT_VERSION = 5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(ZURUF_CONTAINER_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -698,7 +700,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/PhoneNotificationService-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = ZurufPhoneNotificationService;
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Zuruf transcribes the messages you receive on this iPhone, and keeps the text only here.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Zuruf transcribes the messages you receive on this device, and keeps the text only here.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -710,7 +712,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -723,7 +725,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Config/PhoneNotificationService-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = ZurufPhoneNotificationService;
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Zuruf transcribes the messages you receive on this iPhone, and keeps the text only here.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Zuruf transcribes the messages you receive on this device, and keeps the text only here.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -735,7 +737,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;

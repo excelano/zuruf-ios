@@ -27,8 +27,9 @@ case "$lang" in
     *) echo "shots.sh: no set is written for $lang" >&2; exit 2 ;;
 esac
 case "$(xcrun simctl list devices | grep -F "($device)" | head -1)" in
-    *Watch*) watch=1; plist=$(echo "$app"/Watch/*.app/Info.plist) ;;
-    *) watch=; plist=$app/Info.plist ;;
+    *Watch*) kind=watch; plist=$(echo "$app"/Watch/*.app/Info.plist) ;;
+    *iPad*) kind=pad; plist=$app/Info.plist ;;
+    *) kind=phone; plist=$app/Info.plist ;;
 esac
 bundle=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$plist")
 mkdir -p "$outdir"
@@ -42,13 +43,20 @@ shot() {
     xcrun simctl io "$device" screenshot --type=png "$outdir/$name.png" >/dev/null
     echo "$name"
 }
-if [ -n "$watch" ]; then
-    shot 01-contacts
-    shot 02-talk --demo-talk --demo-recording
-    shot 03-inbox --demo-inbox
-else
-    shot 01-contacts
-    shot 02-conversation --demo-talk
-    shot 03-talk --demo-talk --demo-recording
-fi
+case $kind in
+    watch)
+        shot 01-contacts
+        shot 02-talk --demo-talk --demo-recording
+        shot 03-inbox --demo-inbox
+        ;;
+    pad)
+        shot 01-conversation --demo-talk
+        shot 02-talk --demo-talk --demo-recording
+        ;;
+    phone)
+        shot 01-contacts
+        shot 02-conversation --demo-talk
+        shot 03-talk --demo-talk --demo-recording
+        ;;
+esac
 xcrun simctl terminate "$device" "$bundle" >/dev/null 2>&1 || true

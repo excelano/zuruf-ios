@@ -9,8 +9,8 @@ struct HomeView: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
-        NavigationStack(path: $model.talkPath) {
-            List {
+        NavigationSplitView {
+            List(selection: selection) {
                 ForEach(model.conversations) { conversation in
                     ContactRow(recipient: conversation.recipient, systemImage: conversation.systemImage)
                 }
@@ -21,9 +21,6 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("Zuruf")
-            .navigationDestination(for: Recipient.self) { recipient in
-                ConversationView(recipient: recipient)
-            }
             .toolbar {
                 NavigationLink {
                     SettingsView()
@@ -34,6 +31,22 @@ struct HomeView: View {
             .refreshable {
                 await model.refresh()
             }
+        } detail: {
+            if let recipient = model.talkPath.last {
+                ConversationView(recipient: recipient)
+                    .id(recipient)
+            } else {
+                ContentUnavailableView("No Conversation Selected", systemImage: "bubble.left.and.bubble.right")
+            }
+        }
+    }
+
+    /// The open conversation, kept in the model's path so a notification can open one.
+    private var selection: Binding<Recipient?> {
+        Binding {
+            model.talkPath.last
+        } set: { recipient in
+            model.talkPath = recipient.map { [$0] } ?? []
         }
     }
 }
