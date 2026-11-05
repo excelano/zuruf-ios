@@ -34,8 +34,8 @@ Questions about this review: David M. Anderson, david.anderson@excelano.com.
 """
 
 [locales."en-us"]
-website = "https://zuruf.excelano.com/"
-support = "https://zuruf.excelano.com/"
+website = "https://anderix.com/zuruf/"
+support = "https://excelano.com/support/?app=Zuruf&channel=App%20Store"
 privacy = "https://zuruf.excelano.com/privacy"
 description = """
 Hold the yellow button, talk, and let go. A few seconds later your voice plays out loud on the other person's Apple Watch, whether they are in the next room or another state, over Wi-Fi or cellular.
