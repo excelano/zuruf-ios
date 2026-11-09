@@ -35,14 +35,14 @@ struct ConversationView: View {
                     case .received(let clip):
                         ReceivedBubble(clip: clip, showsSender: isGroup)
                             .swipeActions {
-                                Button("Delete", systemImage: "trash", role: .destructive) {
-                                    Task { await model.deleteClip(clip.id) }
-                                }
                                 if clip.playedAt == nil {
                                     Button("Mark as Read", systemImage: "envelope.open") {
                                         Task { await model.markPlayed(clip.id) }
                                     }
                                     .tint(.accentColor)
+                                }
+                                Button("Delete", systemImage: "trash", role: .destructive) {
+                                    Task { await model.deleteClip(clip.id) }
                                 }
                             }
                     case .sent(let clip):

@@ -2,11 +2,9 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "0.4.0"
+version = "0.4.1"
 
 [locales."en-us"]
 whats-new = """
-Zuruf now runs on iPad, with your conversations in a sidebar beside the one that is open. An iPad joins with an invite code like any other device.
-
-When you pick a complication, the Talk complication that follows whoever you last talked to now says "Talk to last person", so it no longer looks like the Talk to complication for that person.
+Swiping all the way across an unread message now marks it as read instead of deleting it. Delete is still there with a shorter swipe and a tap.
 """
