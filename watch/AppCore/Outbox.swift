@@ -55,6 +55,10 @@ final class Outbox: ObservableObject {
     private func drain() async {
         while let item = items.first {
             guard let api = AppModel.shared.api else { return }
+            guard FileManager.default.fileExists(atPath: fileURL(item).path) else {
+                remove(item)
+                continue
+            }
             do {
                 try await api.uploadClip(file: fileURL(item), to: item.recipient)
                 remove(item)
@@ -62,9 +66,10 @@ final class Outbox: ObservableObject {
             } catch let error as APIError where error.isPermanent {
                 remove(item)
             } catch {
-                items[0].attempts += 1
+                guard let index = items.firstIndex(where: { $0.id == item.id }) else { continue }
+                items[index].attempts += 1
                 save()
-                let delay = min(pow(2, Double(items[0].attempts)), 300)
+                let delay = min(pow(2, Double(items[index].attempts)), 300)
                 try? await Task.sleep(for: .seconds(delay))
             }
         }
