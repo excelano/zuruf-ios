@@ -2,9 +2,9 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "0.4.1"
+version = "0.4.2"
 
 [locales."en-us"]
 whats-new = """
-Swiping all the way across an unread message now marks it as read instead of deleting it. Delete is still there with a shorter swipe and a tap.
+Fixes messages getting stuck on the watch. If one recording went missing before it was sent, every message recorded after it waited on the watch instead of going out. The missing one is now skipped and the rest send.
 """
