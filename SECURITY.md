@@ -26,7 +26,7 @@ The latest release receives security fixes. Older versions are not supported. An
 
 The server stores invite codes and API tokens only as SHA-256 hashes, so the database alone cannot be used to sign in. Each clip carries an expiry, the server stops serving it once that passes, and the hourly cron deletes the file and its record. Deleting an account, from the app's Settings or by the operator, deletes its devices and every clip sent by or to it.
 
-On each device the account and its API token are in the Keychain, transcripts are in the app's own container, and a clip waiting to upload is kept there until the server accepts it. Removing the app removes them.
+On each device the account and its API token are in the Keychain, transcripts are in the app's own container, and a clip waiting to upload is kept there until the server accepts it.
 
 ## Operator responsibilities
 
