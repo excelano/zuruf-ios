@@ -131,12 +131,6 @@ private struct ReceivedBubble: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
-                .overlay(alignment: .topTrailing) {
-                    if !clip.reactions.isEmpty {
-                        ReactionCluster(chips: clip.reactions.chips(mine: model.account?.userID))
-                            .offset(x: 8, y: -12)
-                    }
-                }
                 .onLongPressGesture(minimumDuration: 0.35) {
                     showsReactions = true
                 }
@@ -148,6 +142,7 @@ private struct ReceivedBubble: View {
                     }
                     .presentationCompactAdaptation(.popover)
                 }
+                .reactions(clip.reactions, on: .trailing)
                 .accessibilityActions {
                     ForEach(ReactionPalette.emoji, id: \.self) { emoji in
                         Button(myReaction == emoji ? "Remove \(emoji)" : "React \(emoji)") {
@@ -205,12 +200,7 @@ private struct SentBubble: View {
             Spacer(minLength: 60)
             VStack(alignment: .trailing, spacing: 4) {
                 OutgoingShape(text: clipLength(clip.durationMs), transcript: transcripts.texts[clip.id])
-                    .overlay(alignment: .topLeading) {
-                        if !clip.reactions.isEmpty {
-                            ReactionCluster(chips: clip.reactions.chips(mine: nil))
-                                .offset(x: -8, y: -12)
-                        }
-                    }
+                    .reactions(clip.reactions, on: .leading)
                 Text("\(clipTime(clip.createdAt)) · \(playedSummary)")
                     .font(.caption2)
                     .foregroundStyle(.secondary)

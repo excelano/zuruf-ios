@@ -29,29 +29,39 @@ struct ReactionBar: View {
     }
 }
 
-// The reactions on a clip, as small overlapping capsules that hang off the
-// bubble's corner. The same emoji from several people shows once with a count.
-struct ReactionCluster: View {
+// The reactions on a clip, at the size of its Play button. The same emoji
+// from several people shows once with a count.
+private struct ReactionCluster: View {
     let chips: [ReactionChip]
 
     var body: some View {
-        HStack(spacing: -6) {
+        HStack(spacing: 4) {
             ForEach(chips) { chip in
                 HStack(spacing: 2) {
                     Text(chip.emoji)
-                        .font(.system(size: 13))
+                        .font(.title)
                     if chip.count > 1 {
                         Text("\(chip.count)")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(chip.isMine ? Color.black : .secondary)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
                     }
                 }
-                .padding(.horizontal, 5)
-                .padding(.vertical, 3)
-                .background(chip.isMine ? Color.accentColor : Color(.secondarySystemBackground), in: Capsule())
-                .overlay(Capsule().stroke(Color(.systemBackground), lineWidth: 1.5))
             }
         }
         .allowsHitTesting(false)
+    }
+}
+
+extension View {
+    // Hangs a clip's reactions off the bubble's top corner on the given side,
+    // with room above the bubble for them.
+    func reactions(_ reactions: [Reaction], on edge: HorizontalEdge) -> some View {
+        overlay(alignment: edge == .leading ? .topLeading : .topTrailing) {
+            if !reactions.isEmpty {
+                ReactionCluster(chips: reactions.chips)
+                    .offset(x: edge == .leading ? -12 : 12, y: -24)
+            }
+        }
+        .padding(.top, reactions.isEmpty ? 0 : 18)
     }
 }

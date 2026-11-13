@@ -10,19 +10,17 @@ enum ReactionPalette {
     static let emoji = ["👍", "👎", "❤️", "😂", "‼️", "❓"]
 }
 
-// One emoji on a clip, with how many people chose it and whether one of
-// them is this account.
+// One emoji on a clip, with how many people chose it.
 struct ReactionChip: Identifiable {
     let emoji: String
     let count: Int
-    let isMine: Bool
 
     var id: String { emoji }
 }
 
 extension [Reaction] {
     // In the order each emoji was first chosen.
-    func chips(mine userID: String?) -> [ReactionChip] {
+    var chips: [ReactionChip] {
         var order: [String] = []
         var counts: [String: Int] = [:]
         for reaction in self {
@@ -31,10 +29,7 @@ extension [Reaction] {
             }
             counts[reaction.emoji, default: 0] += 1
         }
-        return order.map { emoji in
-            ReactionChip(emoji: emoji, count: counts[emoji] ?? 1,
-                         isMine: contains { $0.emoji == emoji && $0.userId == userID })
-        }
+        return order.map { ReactionChip(emoji: $0, count: counts[$0] ?? 1) }
     }
 }
 

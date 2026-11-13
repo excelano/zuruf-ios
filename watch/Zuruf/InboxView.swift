@@ -109,7 +109,7 @@ private struct SentRow: View {
 
 // The same emoji from several people shows once with a count.
 private func reactionSummary(_ reactions: [Reaction]) -> String {
-    reactions.chips(mine: nil).map { $0.count > 1 ? "\($0.emoji)\($0.count)" : $0.emoji }.joined(separator: " ")
+    reactions.chips.map { $0.count > 1 ? "\($0.emoji)\($0.count)" : $0.emoji }.joined(separator: " ")
 }
 
 struct ClipView: View {
