@@ -57,6 +57,7 @@ struct ReceivedClip: Decodable, Identifiable, Hashable {
     let senderName: String
     let groupName: String?
     var playedAt: Date?
+    var reactions: [Reaction]
 
     var replyRecipient: Recipient {
         if let toGroup, let groupName {
@@ -76,6 +77,11 @@ extension ReceivedClip {
     }
 }
 
+struct Reaction: Decodable, Hashable {
+    let userId: String
+    let emoji: String
+}
+
 struct Receipt: Decodable, Hashable {
     let userId: String
     let playedAt: Date
@@ -88,6 +94,7 @@ struct SentClip: Decodable, Identifiable, Hashable {
     let durationMs: Int
     let createdAt: Date
     let playedBy: [Receipt]
+    let reactions: [Reaction]
 }
 
 extension SentClip {

@@ -206,6 +206,28 @@ final class AppModel: ObservableObject {
         await refresh()
     }
 
+    // Choosing the emoji already on a clip takes the reaction back; any other
+    // replaces it. Reacting counts as playing. Shown at once; the refresh
+    // restores what the server holds if it refused.
+    func react(_ emoji: String, to clipID: String) async {
+        guard let me = account?.userID,
+              let index = clips?.received.firstIndex(where: { $0.id == clipID }),
+              var clip = clips?.received[index] else { return }
+        let removing = clip.reaction(of: me) == emoji
+        clip.reactions.removeAll { $0.userId == me }
+        if !removing {
+            clip.reactions.append(Reaction(userId: me, emoji: emoji))
+            clip.playedAt = clip.playedAt ?? Date()
+        }
+        clips?.received[index] = clip
+        if removing {
+            try? await api?.removeReaction(fromClip: clipID)
+        } else {
+            try? await api?.react(emoji, toClip: clipID)
+        }
+        await refresh()
+    }
+
     func deleteClip(_ clipID: String) async {
         clips?.received.removeAll { $0.id == clipID }
         try? await api?.deleteClip(clipID: clipID)

@@ -111,6 +111,17 @@ struct ZurufAPI {
         _ = try await Self.data(for: request("v1/clips/\(clipID)/played", method: "POST"))
     }
 
+    func react(_ emoji: String, toClip clipID: String) async throws {
+        var request = request("v1/clips/\(clipID)/reaction", method: "PUT")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(["emoji": emoji])
+        _ = try await Self.data(for: request)
+    }
+
+    func removeReaction(fromClip clipID: String) async throws {
+        _ = try await Self.data(for: request("v1/clips/\(clipID)/reaction", method: "DELETE"))
+    }
+
     func deleteClip(clipID: String) async throws {
         _ = try await Self.data(for: request("v1/clips/\(clipID)", method: "DELETE"))
     }

@@ -56,26 +56,28 @@ enum DemoMode {
         return ClipList(
             received: [
                 ReceivedClip(id: "demo-1", senderId: "demo-anna", toGroup: nil, durationMs: 6_200,
-                             createdAt: now.addingTimeInterval(-2 * 60), senderName: "Anna", groupName: nil, playedAt: nil),
+                             createdAt: now.addingTimeInterval(-2 * 60), senderName: "Anna", groupName: nil, playedAt: nil, reactions: []),
                 ReceivedClip(id: "demo-5", senderId: "demo-dana", toGroup: crew.id, durationMs: 5_300,
-                             createdAt: now.addingTimeInterval(-8 * 60), senderName: "Dana", groupName: crew.name, playedAt: nil),
+                             createdAt: now.addingTimeInterval(-8 * 60), senderName: "Dana", groupName: crew.name, playedAt: nil, reactions: []),
                 ReceivedClip(id: "demo-2", senderId: "demo-ben", toGroup: crew.id, durationMs: 4_100,
                              createdAt: now.addingTimeInterval(-45 * 60), senderName: "Ben", groupName: crew.name,
-                             playedAt: now.addingTimeInterval(-43 * 60)),
+                             playedAt: now.addingTimeInterval(-43 * 60), reactions: []),
                 ReceivedClip(id: "demo-3", senderId: "demo-chris", toGroup: nil, durationMs: 11_800,
                              createdAt: now.addingTimeInterval(-3 * 3600), senderName: "Chris", groupName: nil,
-                             playedAt: now.addingTimeInterval(-170 * 60)),
+                             playedAt: now.addingTimeInterval(-170 * 60), reactions: []),
             ],
             sent: [
                 SentClip(id: "demo-6", toUser: nil, toGroup: crew.id, durationMs: 2_900,
                          createdAt: now.addingTimeInterval(-5 * 60),
-                         playedBy: [Receipt(userId: "demo-ben", playedAt: now.addingTimeInterval(-4 * 60))]),
+                         playedBy: [Receipt(userId: "demo-ben", playedAt: now.addingTimeInterval(-4 * 60))],
+                         reactions: []),
                 SentClip(id: "demo-4", toUser: nil, toGroup: crew.id, durationMs: 3_500,
                          createdAt: now.addingTimeInterval(-40 * 60),
                          playedBy: [
                              Receipt(userId: "demo-anna", playedAt: now.addingTimeInterval(-38 * 60)),
                              Receipt(userId: "demo-dana", playedAt: now.addingTimeInterval(-30 * 60)),
-                         ]),
+                         ],
+                         reactions: []),
             ]
         )
     }

@@ -14,7 +14,7 @@ struct InboxView: View {
                 Section("Received") {
                     ForEach(received) { clip in
                         NavigationLink {
-                            ClipView(clip: clip)
+                            ClipView(clipID: clip.id)
                         } label: {
                             ReceivedRow(clip: clip)
                         }
@@ -72,6 +72,10 @@ private struct ReceivedRow: View {
                         .font(.footnote)
                         .lineLimit(2)
                 }
+                if !clip.reactions.isEmpty {
+                    Text(reactionSummary(clip.reactions))
+                        .font(.footnote)
+                }
                 Text(clip.createdAt, format: .relative(presentation: .named))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -90,6 +94,10 @@ private struct SentRow: View {
             Text(playedSummary)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
+            if !clip.reactions.isEmpty {
+                Text(reactionSummary(clip.reactions))
+                    .font(.footnote)
+            }
         }
     }
 
@@ -99,12 +107,23 @@ private struct SentRow: View {
     }
 }
 
+// The same emoji from several people shows once with a count.
+private func reactionSummary(_ reactions: [Reaction]) -> String {
+    reactions.chips(mine: nil).map { $0.count > 1 ? "\($0.emoji)\($0.count)" : $0.emoji }.joined(separator: " ")
+}
+
 struct ClipView: View {
-    let clip: ReceivedClip
+    let clipID: String
     @EnvironmentObject private var model: AppModel
     @ObservedObject private var player = ClipPlayer.shared
 
     var body: some View {
+        if let clip = model.clips?.received.first(where: { $0.id == clipID }) {
+            content(clip)
+        }
+    }
+
+    private func content(_ clip: ReceivedClip) -> some View {
         ScrollView {
             VStack(spacing: 10) {
                 Text(clip.senderName)
@@ -125,6 +144,33 @@ struct ClipView: View {
                 } label: {
                     Label("Reply", systemImage: "mic.fill")
                 }
+                ReactionGrid(selected: model.account.flatMap { clip.reaction(of: $0.userID) }) { emoji in
+                    Task { await model.react(emoji, to: clip.id) }
+                }
+            }
+        }
+    }
+}
+
+// The emoji to react with, three to a row. The one already chosen is
+// highlighted, and choosing it again takes it back.
+private struct ReactionGrid: View {
+    let selected: String?
+    let onReact: (String) -> Void
+
+    var body: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 4) {
+            ForEach(ReactionPalette.emoji, id: \.self) { emoji in
+                Button {
+                    onReact(emoji)
+                } label: {
+                    Text(emoji)
+                        .font(.title3)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .tint(selected == emoji ? .accentColor : nil)
+                .accessibilityLabel(selected == emoji ? "Remove \(emoji)" : "React \(emoji)")
             }
         }
     }

@@ -93,7 +93,13 @@ struct ConversationView: View {
 private struct ReceivedBubble: View {
     let clip: ReceivedClip
     let showsSender: Bool
+    @EnvironmentObject private var model: AppModel
     @ObservedObject private var transcripts = Transcripts.shared
+    @State private var showsReactions = false
+
+    private var myReaction: String? {
+        model.account.flatMap { clip.reaction(of: $0.userID) }
+    }
 
     var body: some View {
         HStack {
@@ -125,12 +131,40 @@ private struct ReceivedBubble: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
+                .overlay(alignment: .topTrailing) {
+                    if !clip.reactions.isEmpty {
+                        ReactionCluster(chips: clip.reactions.chips(mine: model.account?.userID))
+                            .offset(x: 8, y: -12)
+                    }
+                }
+                .onLongPressGesture(minimumDuration: 0.35) {
+                    showsReactions = true
+                }
+                .sensoryFeedback(.impact, trigger: showsReactions) { _, shows in shows }
+                .popover(isPresented: $showsReactions) {
+                    ReactionBar(selected: myReaction) { emoji in
+                        showsReactions = false
+                        react(emoji)
+                    }
+                    .presentationCompactAdaptation(.popover)
+                }
+                .accessibilityActions {
+                    ForEach(ReactionPalette.emoji, id: \.self) { emoji in
+                        Button(myReaction == emoji ? "Remove \(emoji)" : "React \(emoji)") {
+                            react(emoji)
+                        }
+                    }
+                }
                 Text(clipTime(clip.createdAt))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 60)
         }
+    }
+
+    private func react(_ emoji: String) {
+        Task { await model.react(emoji, to: clip.id) }
     }
 }
 
@@ -171,6 +205,12 @@ private struct SentBubble: View {
             Spacer(minLength: 60)
             VStack(alignment: .trailing, spacing: 4) {
                 OutgoingShape(text: clipLength(clip.durationMs), transcript: transcripts.texts[clip.id])
+                    .overlay(alignment: .topLeading) {
+                        if !clip.reactions.isEmpty {
+                            ReactionCluster(chips: clip.reactions.chips(mine: nil))
+                                .offset(x: -8, y: -12)
+                        }
+                    }
                 Text("\(clipTime(clip.createdAt)) · \(playedSummary)")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
