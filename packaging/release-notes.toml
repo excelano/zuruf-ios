@@ -2,9 +2,9 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "0.5.0"
+version = "0.5.1"
 
 [locales."en-us"]
 whats-new = """
-React to a message with an emoji. On iPhone, touch and hold a message you received and pick one; on the watch, open the message from the inbox. Choosing another emoji changes your reaction and choosing the same one again takes it back. Reactions show on the message for everyone in the conversation, and the person who sent it gets a quiet notification.
+Reactions on iPhone are larger and drawn without a background, at the size of the Play button. Tapping the notification for a reaction to your message opens that conversation on iPhone, or the inbox on the watch.
 """
