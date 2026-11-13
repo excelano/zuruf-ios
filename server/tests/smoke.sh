@@ -157,6 +157,14 @@ expect 201 "upload clip"
 check "duration read from the file" '.duration_ms > 2900 and .duration_ms < 3200'
 clip=$(jq -r .id <<< "$body")
 
+client_id=0123456789abcdef0123456789abcdef
+call POST /v1/clips $alice -F "to_user=$bob_id" -F "client_id=$client_id" -F "audio=@$work/short.m4a"
+expect 201 "upload clip with a client id"
+resent=$(jq -r .id <<< "$body")
+call POST /v1/clips $alice -F "to_user=$bob_id" -F "client_id=$client_id" -F "audio=@$work/short.m4a"
+expect 200 "upload again with the same client id"
+check "the retry answers with the clip already stored" ".id == \"$resent\""
+
 call POST /v1/clips $alice -F "to_user=$bob_id" -F "audio=@$work/bogus.m4a"
 expect 415 "reject a file that is not m4a"
 call POST /v1/clips $alice -F "to_user=$bob_id" -F "audio=@$work/long.m4a"
@@ -167,7 +175,7 @@ call POST /v1/clips $alice -F "to_user=$alice_id" -F "audio=@$work/short.m4a"
 expect 404 "cannot send to yourself"
 
 call GET /v1/clips $bob
-check "Bob has one unplayed clip from Alice" '.received | length == 1 and .[0].sender_name == "Alice" and .[0].played_at == null'
+check "Bob has two unplayed clips from Alice" '.received | length == 2 and all(.sender_name == "Alice" and .played_at == null)'
 call GET "/v1/clips/$clip/audio" $bob -o "$work/fetched.m4a"
 expect 200 "recipient downloads audio"
 cmp -s "$work/short.m4a" "$work/fetched.m4a" && echo "ok   audio bytes match" || { echo "FAIL audio bytes differ"; failures=$((failures + 1)); }
@@ -177,7 +185,7 @@ expect 200 "sender downloads their own audio"
 call POST "/v1/clips/$clip/played" $bob
 expect 200 "mark played"
 call GET /v1/clips $alice
-check "Alice sees Bob's played receipt" ".sent[0].played_by[0].user_id == \"$bob_id\""
+check "Alice sees Bob's played receipt" ".sent[] | select(.id == \"$clip\") | .played_by[0].user_id == \"$bob_id\""
 
 call DELETE "/v1/clips/$clip" $alice
 expect 404 "sender cannot delete a sent clip"

@@ -18,6 +18,8 @@ const MIGRATIONS = [
     "ALTER TABLE users ADD COLUMN alerts TEXT NOT NULL DEFAULT 'watch' CHECK (alerts IN ('watch', 'phone', 'both'))",
     'ALTER TABLE users DROP COLUMN alerts',
     'ALTER TABLE invites ADD COLUMN for_user_id TEXT REFERENCES users(id) ON DELETE CASCADE',
+    'ALTER TABLE clips ADD COLUMN client_id TEXT',
+    'CREATE UNIQUE INDEX clips_by_client_id ON clips(sender_id, client_id)',
 ];
 
 function getDb(): PDO {

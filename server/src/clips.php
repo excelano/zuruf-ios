@@ -44,18 +44,28 @@ function m4aDurationMs(string $path): ?int {
     return intdiv($fields['duration'] * 1000, $fields['timescale']);
 }
 
-function storeClip(string $senderId, ?string $senderDeviceId, ?string $toUser, ?string $toGroup, int $durationMs): string {
+function storeClip(string $senderId, ?string $senderDeviceId, ?string $toUser, ?string $toGroup, int $durationMs, ?string $clientId = null): string {
     $id = randomId();
     $now = time();
     query(
-        'INSERT INTO clips (id, sender_id, sender_device_id, recipient_user_id, group_id, duration_ms, created_at, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [$id, $senderId, $senderDeviceId, $toUser, $toGroup, $durationMs, $now, $now + CLIP_TTL_DAYS * 86400]
+        'INSERT INTO clips (id, sender_id, sender_device_id, recipient_user_id, group_id, duration_ms, created_at, expires_at, client_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [$id, $senderId, $senderDeviceId, $toUser, $toGroup, $durationMs, $now, $now + CLIP_TTL_DAYS * 86400, $clientId]
     );
     return $id;
 }
 
 function createClip(array $device): never {
+    $clientId = isset($_POST['client_id']) ? idField($_POST, 'client_id') : null;
+    if ($clientId !== null) {
+        $sent = query(
+            'SELECT * FROM clips WHERE sender_id = ? AND client_id = ?', [$device['user_id'], $clientId]
+        )->fetch();
+        if ($sent) {
+            respond(200, clipJson($sent));
+        }
+    }
+
     $file = $_FILES['audio'] ?? null;
     if ($file === null && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0 && empty($_POST)) {
         fail(413, 'too_large');
@@ -101,7 +111,7 @@ function createClip(array $device): never {
         fail(429, 'rate_limited');
     }
 
-    $id = storeClip($senderId, $device['id'], $toUser, $toGroup, $durationMs);
+    $id = storeClip($senderId, $device['id'], $toUser, $toGroup, $durationMs, $clientId);
     @mkdir(DATA_DIR . '/clips', 0700, true);
     if (!move_uploaded_file($file['tmp_name'], clipPath($id))) {
         query('DELETE FROM clips WHERE id = ?', [$id]);

@@ -57,6 +57,7 @@ CREATE TABLE clips (
     duration_ms       INTEGER NOT NULL,
     created_at        INTEGER NOT NULL,
     expires_at        INTEGER NOT NULL,
+    client_id         TEXT,
     CHECK ((recipient_user_id IS NULL) <> (group_id IS NULL))
 );
 
@@ -65,6 +66,7 @@ CREATE INDEX clips_by_group ON clips(group_id);
 CREATE INDEX clips_by_sender ON clips(sender_id);
 CREATE INDEX clips_by_device ON clips(sender_device_id, created_at);
 CREATE INDEX clips_by_expiry ON clips(expires_at);
+CREATE UNIQUE INDEX clips_by_client_id ON clips(sender_id, client_id);
 
 CREATE TABLE clip_receipts (
     clip_id   TEXT NOT NULL REFERENCES clips(id) ON DELETE CASCADE,
