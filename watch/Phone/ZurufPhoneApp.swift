@@ -100,10 +100,15 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     }
 
     // Tapping a clip's alert opens its conversation, where it can be played
-    // and answered.
+    // and answered; tapping a reaction's opens the conversation of the clip
+    // reacted to.
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse) async {
-        guard let clipID = ClipNotification.clipID(in: response.notification.request.content) else { return }
-        await AppModel.shared.reply(toClip: clipID)
+        let content = response.notification.request.content
+        if let clipID = ClipNotification.clipID(in: content) {
+            await AppModel.shared.reply(toClip: clipID)
+        } else if let clipID = ClipNotification.reactedClipID(in: content) {
+            await AppModel.shared.openConversation(ofSentClip: clipID)
+        }
     }
 }

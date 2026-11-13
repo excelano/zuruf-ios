@@ -121,7 +121,8 @@ function pushClip(array $clip): void {
 }
 
 // A quiet alert to the clip's sender: no sound, no clip to fetch and no
-// badge change. The phone wakes to refresh, so the reaction shows on the clip.
+// badge change. It names the clip by a key of its own, since the
+// notification extensions fetch the audio of any clip_id. The phone wakes to refresh, so the reaction shows on the clip.
 function pushReaction(array $clip, string $reactor, string $emoji): void {
     $alert = [
         'aps' => [
@@ -130,6 +131,7 @@ function pushReaction(array $clip, string $reactor, string $emoji): void {
                 'body' => "Reacted $emoji to your message",
             ],
         ],
+        'reacted_clip_id' => $clip['id'],
         'server_id' => serverId(),
     ];
     pushEach(pushTargets([$clip['sender_id']]), (int)$clip['expires_at'], function (array $device) use ($alert) {

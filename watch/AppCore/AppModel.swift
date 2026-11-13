@@ -234,11 +234,23 @@ final class AppModel: ObservableObject {
         await refresh()
     }
 
-    func recipientName(of clip: SentClip) -> String {
-        if let toGroup = clip.toGroup {
-            return contacts?.name(ofGroup: toGroup) ?? "Group"
+    // Opens the conversation a clip you sent belongs to.
+    func openConversation(ofSentClip clipID: String) async {
+        await refresh()
+        if let recipient = clips?.sent.first(where: { $0.id == clipID }).flatMap(recipient(of:)) {
+            talk(to: recipient)
         }
-        return clip.toUser.flatMap { contacts?.name(ofUser: $0) } ?? "Someone"
+    }
+
+    func recipient(of clip: SentClip) -> Recipient? {
+        if let toGroup = clip.toGroup {
+            return contacts?.name(ofGroup: toGroup).map { .group(id: toGroup, name: $0) }
+        }
+        return clip.toUser.flatMap { id in contacts?.name(ofUser: id).map { .person(id: id, name: $0) } }
+    }
+
+    func recipientName(of clip: SentClip) -> String {
+        recipient(of: clip)?.name ?? (clip.toGroup == nil ? "Someone" : "Group")
     }
 
     private func registerDevice() async {

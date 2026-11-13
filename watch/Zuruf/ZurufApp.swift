@@ -98,10 +98,19 @@ final class AppDelegate: NSObject, WKApplicationDelegate, UNUserNotificationCent
     }
 
     // Reply opens the sender's talk screen, and the title strip opens the
-    // inbox, which has the clip at the top.
+    // inbox, which has the clip at the top. A reaction's notification opens
+    // the inbox too, where Sent shows the reaction.
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse) async {
-        guard let clipID = ClipNotification.clipID(in: response.notification.request.content) else { return }
+        let content = response.notification.request.content
+        if ClipNotification.reactedClipID(in: content) != nil {
+            await MainActor.run {
+                AppModel.shared.talkPath = []
+                AppModel.shared.showInbox = true
+            }
+            return
+        }
+        guard let clipID = ClipNotification.clipID(in: content) else { return }
         switch response.actionIdentifier {
         case ClipNotification.replyAction:
             await AppModel.shared.reply(toClip: clipID)

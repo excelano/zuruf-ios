@@ -41,11 +41,20 @@ enum ClipNotification {
     }
 
     static func clipID(in content: UNNotificationContent) -> String? {
-        guard let clipID = content.userInfo["clip_id"] as? String,
+        id("clip_id", in: content)
+    }
+
+    // The sent clip a reaction notification is about.
+    static func reactedClipID(in content: UNNotificationContent) -> String? {
+        id("reacted_clip_id", in: content)
+    }
+
+    private static func id(_ key: String, in content: UNNotificationContent) -> String? {
+        guard let id = content.userInfo[key] as? String,
               content.userInfo["server_id"] as? String == AccountStore.load()?.serverID else {
             return nil
         }
-        return clipID
+        return id
     }
 
     // True the first time it is called for a clip, so a notification reopened
