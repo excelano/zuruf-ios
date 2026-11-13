@@ -95,18 +95,11 @@ function pushClip(array $clip): void {
     if (!$recipients) {
         return;
     }
-    if (!function_exists('curl_init')) {
-        error_log('zuruf: the curl extension is missing; pushes are disabled');
-        return;
-    }
-
     $sender = query('SELECT display_name FROM users WHERE id = ?', [$clip['sender_id']])->fetchColumn();
-    $groupName = $clip['group_id'] === null ? null
-        : query('SELECT name FROM groups WHERE id = ?', [$clip['group_id']])->fetchColumn();
     $alert = [
         'aps' => [
             'alert' => [
-                'title' => $groupName === null ? $sender : "$sender in $groupName",
+                'title' => pushTitle($sender, $clip),
                 'body' => 'New message',
             ],
             'sound' => 'default',
@@ -117,19 +110,58 @@ function pushClip(array $clip): void {
         'clip_id' => $clip['id'],
         'server_id' => serverId(),
     ];
-
-    // APNs ties a connection to the first key used on it, so each key, which
-    // is one per platform and environment, gets a connection of its own.
-    $handles = [];
-    foreach (pushTargets($recipients) as $device) {
-        $handle = $handles[$device['platform'] . '/' . $device['apns_env']] ??= curl_init();
-        $payload = $alert;
-        // content-available also wakes the app, to refresh and transcribe.
+    // content-available also wakes the app, to refresh and transcribe.
+    pushEach(pushTargets($recipients), (int)$clip['expires_at'], function (array $device) use ($alert) {
         if ($device['platform'] === 'ios') {
-            $payload['aps']['badge'] = unplayedCount($device['user_id']);
-            $payload['aps']['content-available'] = 1;
+            $alert['aps']['badge'] = unplayedCount($device['user_id']);
+            $alert['aps']['content-available'] = 1;
         }
-        apnsSend($handle, $device, $payload, (int)$clip['expires_at']);
+        return $alert;
+    });
+}
+
+// A quiet alert to the clip's sender: no sound, no clip to fetch and no
+// badge change. The phone wakes to refresh, so the reaction shows on the clip.
+function pushReaction(array $clip, string $reactor, string $emoji): void {
+    $alert = [
+        'aps' => [
+            'alert' => [
+                'title' => pushTitle($reactor, $clip),
+                'body' => "Reacted $emoji to your message",
+            ],
+        ],
+        'server_id' => serverId(),
+    ];
+    pushEach(pushTargets([$clip['sender_id']]), (int)$clip['expires_at'], function (array $device) use ($alert) {
+        if ($device['platform'] === 'ios') {
+            $alert['aps']['content-available'] = 1;
+        }
+        return $alert;
+    });
+}
+
+function pushTitle(string $name, array $clip): string {
+    if ($clip['group_id'] === null) {
+        return $name;
+    }
+    $groupName = query('SELECT name FROM groups WHERE id = ?', [$clip['group_id']])->fetchColumn();
+    return "$name in $groupName";
+}
+
+// APNs ties a connection to the first key used on it, so each key, which is
+// one per platform and environment, gets a connection of its own.
+function pushEach(array $devices, int $expiresAt, callable $payloadFor): void {
+    if (!$devices) {
+        return;
+    }
+    if (!function_exists('curl_init')) {
+        error_log('zuruf: the curl extension is missing; pushes are disabled');
+        return;
+    }
+    $handles = [];
+    foreach ($devices as $device) {
+        $handle = $handles[$device['platform'] . '/' . $device['apns_env']] ??= curl_init();
+        apnsSend($handle, $device, $payloadFor($device), $expiresAt);
     }
     foreach ($handles as $handle) {
         curl_close($handle);

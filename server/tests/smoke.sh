@@ -187,6 +187,24 @@ expect 200 "mark played"
 call GET /v1/clips $alice
 check "Alice sees Bob's played receipt" ".sent[] | select(.id == \"$clip\") | .played_by[0].user_id == \"$bob_id\""
 
+json PUT "/v1/clips/$resent/reaction" $bob '{"emoji": "👍"}'
+expect 200 "recipient reacts to a clip"
+call GET /v1/clips $bob
+check "Bob sees his reaction" ".received[] | select(.id == \"$resent\") | .reactions == [{\"user_id\": \"$bob_id\", \"emoji\": \"👍\"}]"
+check "reacting counts as playing" ".received[] | select(.id == \"$resent\") | .played_at != null"
+json PUT "/v1/clips/$resent/reaction" $bob '{"emoji": "❤️"}'
+expect 200 "another emoji replaces the reaction"
+call GET /v1/clips $alice
+check "Alice sees Bob's one reaction on her sent clip" ".sent[] | select(.id == \"$resent\") | .reactions == [{\"user_id\": \"$bob_id\", \"emoji\": \"❤️\"}]"
+json PUT "/v1/clips/$resent/reaction" $bob '{"emoji": "🦆"}'
+expect 422 "only the offered emoji are accepted"
+json PUT "/v1/clips/$resent/reaction" $alice '{"emoji": "👍"}'
+expect 404 "sender cannot react to a sent clip"
+call DELETE "/v1/clips/$resent/reaction" $bob
+expect 200 "remove a reaction"
+call GET /v1/clips $alice
+check "the removed reaction is gone" ".sent[] | select(.id == \"$resent\") | .reactions == []"
+
 call DELETE "/v1/clips/$clip" $alice
 expect 404 "sender cannot delete a sent clip"
 call DELETE "/v1/clips/$clip" $bob

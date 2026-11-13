@@ -20,6 +20,13 @@ const MIGRATIONS = [
     'ALTER TABLE invites ADD COLUMN for_user_id TEXT REFERENCES users(id) ON DELETE CASCADE',
     'ALTER TABLE clips ADD COLUMN client_id TEXT',
     'CREATE UNIQUE INDEX clips_by_client_id ON clips(sender_id, client_id)',
+    'CREATE TABLE clip_reactions (
+        clip_id    TEXT NOT NULL REFERENCES clips(id) ON DELETE CASCADE,
+        user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        emoji      TEXT NOT NULL,
+        reacted_at INTEGER NOT NULL,
+        PRIMARY KEY (clip_id, user_id)
+    )',
 ];
 
 function getDb(): PDO {

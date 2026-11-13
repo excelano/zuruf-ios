@@ -181,14 +181,19 @@ function listClips(array $device): never {
     foreach ($receipts as $receipt) {
         $playedBy[$receipt['clip_id']][] = ['user_id' => $receipt['user_id'], 'played_at' => (int)$receipt['played_at']];
     }
+    $reactions = reactionsByClip(array_merge(array_column($received, 'id'), array_column($sent, 'id')));
 
     respond(200, [
         'received' => array_map(fn($c) => clipJson($c) + [
             'sender_name' => $c['sender_name'],
             'group_name' => $c['group_name'],
             'played_at' => $c['played_at'] === null ? null : (int)$c['played_at'],
+            'reactions' => $reactions[$c['id']] ?? [],
         ], $received),
-        'sent' => array_map(fn($c) => clipJson($c) + ['played_by' => $playedBy[$c['id']] ?? []], $sent),
+        'sent' => array_map(fn($c) => clipJson($c) + [
+            'played_by' => $playedBy[$c['id']] ?? [],
+            'reactions' => $reactions[$c['id']] ?? [],
+        ], $sent),
     ]);
 }
 

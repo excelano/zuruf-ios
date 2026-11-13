@@ -13,6 +13,7 @@ require $root . '/src/db.php';
 require $root . '/src/http.php';
 require $root . '/src/accounts.php';
 require $root . '/src/clips.php';
+require $root . '/src/reactions.php';
 require $root . '/src/apns.php';
 require $root . '/src/echo.php';
 require $root . '/src/admin.php';
@@ -35,6 +36,8 @@ $routes = [
     ['GET', '/v1/clips', fn() => listClips(requireDevice())],
     ['GET', "/v1/clips/$id/audio", fn($clipId) => streamClipAudio(requireDevice(), $clipId)],
     ['POST', "/v1/clips/$id/played", fn($clipId) => markPlayed(requireDevice(), $clipId)],
+    ['PUT', "/v1/clips/$id/reaction", fn($clipId) => setReaction(requireDevice(), $clipId, jsonBody())],
+    ['DELETE', "/v1/clips/$id/reaction", fn($clipId) => removeReaction(requireDevice(), $clipId)],
     ['DELETE', "/v1/clips/$id", fn($clipId) => deleteReceivedClip(requireDevice(), $clipId)],
     ['POST', '/v1/admin/invites', function () { requireAdmin(); adminCreateInvite(jsonBody()); }],
     ['GET', '/v1/admin/users', function () { requireAdmin(); adminListUsers(); }],

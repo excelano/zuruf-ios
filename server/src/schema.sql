@@ -82,3 +82,12 @@ CREATE TABLE clip_deletions (
     deleted_at INTEGER NOT NULL,
     PRIMARY KEY (clip_id, user_id)
 );
+
+-- One reaction per recipient per clip; choosing another emoji replaces it.
+CREATE TABLE clip_reactions (
+    clip_id    TEXT NOT NULL REFERENCES clips(id) ON DELETE CASCADE,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    emoji      TEXT NOT NULL,
+    reacted_at INTEGER NOT NULL,
+    PRIMARY KEY (clip_id, user_id)
+);
