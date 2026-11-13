@@ -12,10 +12,15 @@ final class Outbox: ObservableObject {
         let id: UUID
         let recipient: Recipient
         var attempts: Int
+
+        var clientID: String {
+            id.uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+        }
     }
 
     @Published private(set) var items: [Item] = []
     private var isSending = false
+    private var retryWait: Task<Void, Never>?
     private let directory: URL
     private let indexURL: URL
 
@@ -34,11 +39,15 @@ final class Outbox: ObservableObject {
         guard (try? FileManager.default.moveItem(at: file, to: fileURL(item))) != nil else { return }
         items.append(item)
         save()
+        SendLog.shared.note("enqueued \(item.id.uuidString.prefix(8)), \(items.count) waiting")
         send()
     }
 
     func send() {
-        guard !isSending else { return }
+        guard !isSending else {
+            retryWait?.cancel()
+            return
+        }
         isSending = true
         Task {
             await drain()
@@ -59,20 +68,37 @@ final class Outbox: ObservableObject {
                 remove(item)
                 continue
             }
+            let tag = "upload \(item.id.uuidString.prefix(8)) try \(item.attempts + 1)"
+            let started = Date.now
+            SendLog.shared.note("\(tag) start")
             do {
-                try await api.uploadClip(file: fileURL(item), to: item.recipient)
+                try await BackgroundTime.keep(reason: "Sending a message") {
+                    try await api.uploadClip(file: self.fileURL(item), clientID: item.clientID, to: item.recipient)
+                } expired: {
+                    SendLog.shared.note("\(tag) ran out of background time after \(Self.seconds(since: started))")
+                }
+                SendLog.shared.note("\(tag) sent in \(Self.seconds(since: started))")
                 remove(item)
                 await AppModel.shared.refresh()
             } catch let error as APIError where error.isPermanent {
+                SendLog.shared.note("\(tag) after \(Self.seconds(since: started)), dropped", error: error)
                 remove(item)
             } catch {
+                SendLog.shared.note("\(tag) after \(Self.seconds(since: started))", error: error)
                 guard let index = items.firstIndex(where: { $0.id == item.id }) else { continue }
                 items[index].attempts += 1
                 save()
                 let delay = min(pow(2, Double(items[index].attempts)), 300)
-                try? await Task.sleep(for: .seconds(delay))
+                let wait = Task { _ = try? await Task.sleep(for: .seconds(delay)) }
+                retryWait = wait
+                await wait.value
+                retryWait = nil
             }
         }
+    }
+
+    private static func seconds(since date: Date) -> String {
+        String(format: "%.1fs", Date.now.timeIntervalSince(date))
     }
 
     private func remove(_ item: Item) {

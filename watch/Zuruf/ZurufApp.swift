@@ -11,7 +11,6 @@ import WatchKit
 @main
 struct ZurufApp: App {
     @WKApplicationDelegateAdaptor private var delegate: AppDelegate
-    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var model = AppModel.shared
 
     var body: some Scene {
@@ -35,11 +34,6 @@ struct ZurufApp: App {
                 }
             }
         }
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
-                Task { await model.refresh() }
-            }
-        }
         WKNotificationScene(controller: NotificationController.self, category: ClipNotification.category)
     }
 }
@@ -50,9 +44,29 @@ final class AppDelegate: NSObject, WKApplicationDelegate, UNUserNotificationCent
         ClipNotification.registerCategory()
         AccountLink.shared.activate()
         Task { @MainActor in
+            SendLog.shared.note("app launched")
             AppModel.shared.outbox.send()
             await AppModel.shared.requestNotifications()
         }
+    }
+
+    func applicationDidBecomeActive() {
+        Task { @MainActor in
+            SendLog.shared.note("app active")
+            AppModel.shared.appBecameActive()
+        }
+    }
+
+    func applicationWillResignActive() {
+        Task { @MainActor in SendLog.shared.note("app resigning active") }
+    }
+
+    func applicationDidEnterBackground() {
+        Task { @MainActor in SendLog.shared.note("app in background") }
+    }
+
+    func applicationWillEnterForeground() {
+        Task { @MainActor in SendLog.shared.note("app entering foreground") }
     }
 
     // Transcripts from the phone can arrive while the app is in the

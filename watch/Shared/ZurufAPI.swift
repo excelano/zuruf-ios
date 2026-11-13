@@ -115,7 +115,7 @@ struct ZurufAPI {
         _ = try await Self.data(for: request("v1/clips/\(clipID)", method: "DELETE"))
     }
 
-    func uploadClip(file: URL, to recipient: Recipient) async throws {
+    func uploadClip(file: URL, clientID: String, to recipient: Recipient) async throws {
         let boundary = "zuruf-\(UUID().uuidString)"
         var request = request("v1/clips", method: "POST")
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
@@ -125,7 +125,9 @@ struct ZurufAPI {
         case .group(let id, _): ("to_group", id)
         }
         var body = Data()
-        body.append("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(field.0)\"\r\n\r\n\(field.1)\r\n")
+        for (name, value) in [field, ("client_id", clientID)] {
+            body.append("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"\r\n\r\n\(value)\r\n")
+        }
         body.append("--\(boundary)\r\nContent-Disposition: form-data; name=\"audio\"; filename=\"clip.m4a\"\r\n")
         body.append("Content-Type: audio/mp4\r\n\r\n")
         body.append(try Data(contentsOf: file))

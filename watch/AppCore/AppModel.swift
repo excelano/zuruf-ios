@@ -38,6 +38,7 @@ final class AppModel: ObservableObject {
     let outbox = Outbox()
 
     private var apnsToken: String?
+    private var isRefreshing = false
 
     var api: ZurufAPI? {
         account.map(ZurufAPI.init)
@@ -122,6 +123,8 @@ final class AppModel: ObservableObject {
 
     func refresh() async {
         guard let api, !DemoMode.isActive else { return }
+        isRefreshing = true
+        defer { isRefreshing = false }
         do {
             async let fetchedContacts = api.contacts()
             async let fetchedClips = api.clips()
@@ -135,8 +138,15 @@ final class AppModel: ObservableObject {
             signOut()
             await AccountLink.shared.catchUp()
         } catch {
+            SendLog.shared.note("refresh", error: error)
             refreshError = error.localizedDescription
         }
+    }
+
+    func appBecameActive() {
+        outbox.send()
+        guard !isRefreshing else { return }
+        Task { await refresh() }
     }
 
     // Sending to a person or group answers what they sent, so their unplayed

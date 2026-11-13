@@ -38,6 +38,9 @@ struct SettingsView: View {
             }
             Section {
                 LabeledContent("Version", value: Self.version)
+                NavigationLink("Send log") {
+                    SendLogView()
+                }
             }
             Section {
                 Button(isDeleting ? "Deleting…" : "Delete account", role: .destructive) {

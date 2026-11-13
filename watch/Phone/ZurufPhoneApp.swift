@@ -35,7 +35,7 @@ struct ZurufPhoneApp: App {
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
-                Task { await model.refresh() }
+                model.appBecameActive()
             }
         }
     }
