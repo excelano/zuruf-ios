@@ -6,7 +6,7 @@ Messages are stored and forwarded rather than streamed. A device records a clip 
 
 Zuruf is invite-only. An account comes from a single-use invite code that the server's operator creates, so an app build is useless without an invitation to a server. Push notifications reach only an app signed by the developer account that holds the APNs key.
 
-This repository holds the watch and iPhone apps, in `watch/`, and the server, in `server/`.
+This repository holds the watch and iPhone apps, in `watch/`. The server is [zuruf-server](https://github.com/excelano/zuruf-server), which covers running one, and the Linux tray client is [zuruf-linux](https://github.com/excelano/zuruf-linux).
 
 ## The watch app
 
@@ -25,47 +25,3 @@ A clip's notification goes to the phone, and iOS shows it there while the phone 
 ## Building
 
 The app's identity, meaning the team id, the App Store bundle id, the display name and the default server, lives in `watch/Config/Zuruf.xcconfig`, and the version in `watch/Config/Version.xcconfig`. The project's `Zuruf` scheme builds the iPhone app with the watch app embedded, which is how both reach the App Store on one record; `ZurufWatch` builds the watch app alone for installing on a watch during development.
-
-## The server
-
-The server is a small PHP application backed by SQLite, written to run on ordinary cPanel shared hosting with nothing to keep running between requests. It needs PHP with the `pdo_sqlite`, `curl` and `openssl` extensions, and a curl built with HTTP/2, which APNs requires. This prints `true` when the host's curl qualifies:
-
-```bash
-php -r 'var_dump((bool)(curl_version()["features"] & CURL_VERSION_HTTP2));'
-```
-
-```
-server/public/       The document root: index.php routes every request.
-server/src/          Accounts and invites, clips, the APNs sender, the echo bot, admin.
-server/cron.php      Hourly cleanup of expired clips and invites.
-server/config.php    Your settings, copied from config.example.php. Never committed.
-server/keys/         Your APNs keys. Never committed.
-server/data/         The database and clip files, created on first request.
-```
-
-Only `public/` is reachable from the web. Everything else sits beside it, so the configuration, keys, database and audio stay outside the web root without depending on rewrite rules.
-
-## Running a server
-
-In Certificates, Identifiers & Profiles, enable Push Notifications on both App IDs, the watch app's and the iPhone app's, then create an APNs key for each app and each environment, restricted to that App ID's topic. Development builds installed from Xcode use the sandbox keys; TestFlight and App Store builds use the production keys. Apple lets you download each `.p8` file once.
-
-Point a hostname's document root at `server/public/` and upload the `server/` directory. If your host will not move a document root, upload the contents of `public/` into the document root it gave you and the rest of `server/` into a folder named `zuruf-server` beside it; `index.php` looks there when it finds no server beside itself. The server must sit at the root of its hostname, and it refuses plain HTTP. Copy `config.example.php` to `config.php`, fill in your team id, each app's bundle id and key ids under `APNS_APPS`, the watch app's under `watchos` and the iPhone app's under `ios`, and a long random admin token, and put the `.p8` files in `keys/`. Then add an hourly cron job:
-
-```bash
-php /path/to/server/cron.php
-```
-
-The server is managed from its admin page, at `/admin` on the server's own address, in any browser on a computer or a phone. It signs in with the admin token and makes invite codes, lists who has joined and when each device last opened the app, creates, renames and deletes groups, adds and removes members, deletes people along with every message sent by or to them, sets the words to recognize, and hides or shows Echo. Words to recognize are names and words that transcribing should expect beyond those of the people and groups, such as a name that sounds like a common word, and reach every device with its contacts. Link a device makes a one-day code that adds a device to an existing person's account instead of making a new one, for a computer that no phone or watch can sign in. An invite or link code is shown once, when it is made, because the server keeps only its hash. Changes reach each device the next time Zuruf refreshes its contacts, such as when it is opened.
-
-The page is a client of the server's `/v1/admin` API, which takes the same token as a bearer token and can be scripted directly:
-
-```bash
-curl -s -X POST https://zuruf.example.com/v1/admin/invites \
-  -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' -d '{}'
-```
-
-`GET /v1/admin/users` returns everyone and every group, `/v1/admin/groups` creates a group, `PATCH` and `DELETE` on `/v1/admin/groups/{id}` rename and delete one, `/v1/admin/groups/{id}/members` adds a member, and `DELETE /v1/admin/users/{id}` removes a person, `POST /v1/admin/users/{id}/link-codes` makes a link code for them, `PUT /v1/admin/vocabulary` with `{"words": [...]}` sets the words to recognize, up to 50 of up to 40 characters each, which `GET /v1/contacts` and `GET /v1/admin/users` return as `vocabulary`, and `PUT /v1/admin/echo` with `{"shown": false}` or `true` hides or shows Echo. Echo is a built-in contact that sends back any clip it receives, which makes it the quickest check that recording, upload, push and playback all work. Hiding it from the admin page deletes it along with everyone's messages with it, and showing it again makes a fresh one.
-
-## Testing
-
-`server/tests/smoke.sh` runs the API end to end against PHP's built-in server with a throwaway database, and needs `curl`, `jq` and `ffmpeg` besides PHP. It does not send pushes; those are checked on a real watch and iPhone.
