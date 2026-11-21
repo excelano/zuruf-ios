@@ -14,7 +14,7 @@ The latest release receives security fixes. Older versions are not supported. A 
 
 **Access comes only from an invitation.** There is no sign-up. An operator creates a single-use invite code that expires, and redeeming it creates an account and issues that device an API token. Joining on the watch or the iPhone signs the other in over WatchConnectivity, as a device of its own with its own token.
 
-**The apps talk only to the server they joined and to Apple.** A push holds the sender's name, the clip id and the server id, and the watch or the iPhone fetches the audio from the server directly. What the server does with clips and accounts is in [zuruf-server's security policy](https://github.com/excelano/zuruf-server/blob/main/SECURITY.md).
+**The apps talk only to the server they joined and to Apple.** A push holds the sender's name, the clip id and the server id, and the watch or the iPhone fetches the audio from the server directly.
 
 **Transcripts stay on the phone and its watch.** The iPhone transcribes clips with Apple's speech recognition on the device, and sends the text to its paired watch over WatchConnectivity, never through the server.
 

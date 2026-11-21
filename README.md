@@ -6,7 +6,7 @@ Messages are stored and forwarded rather than streamed. A device records a clip 
 
 Zuruf is invite-only. An account comes from a single-use invite code that the server's operator creates, so an app build is useless without an invitation to a server. Push notifications reach only an app signed by the developer account that holds the APNs key.
 
-This repository holds the watch and iPhone apps, in `watch/`. The server is [zuruf-server](https://github.com/excelano/zuruf-server), which covers running one, and the Linux tray client is [zuruf-linux](https://github.com/excelano/zuruf-linux).
+This repository holds the watch and iPhone apps, in `watch/`.
 
 ## The watch app
 
