@@ -71,7 +71,8 @@ struct TalkWidgetView: View {
         switch family {
         case .accessoryCorner:
             Image(systemName: "mic.fill")
-                .font(.title2)
+                .resizable()
+                .scaledToFit()
                 .widgetLabel(entry.isLastRecipientPreview ? "Last person" : entry.recipient?.name ?? "Zuruf")
         case .accessoryRectangular:
             VStack(alignment: .leading) {
@@ -95,7 +96,9 @@ struct TalkWidgetView: View {
                             .font(.title3.bold())
                     } else {
                         Image(systemName: "mic.fill")
-                            .font(.title3)
+                            .resizable()
+                            .scaledToFit()
+                            .scaleEffect(Self.micHeight)
                     }
                 }
                 .foregroundStyle(renderingMode == .fullColor ? Self.ink : .primary)
@@ -106,6 +109,8 @@ struct TalkWidgetView: View {
     private var talkTo: String? {
         entry.isLastRecipientPreview ? "Talk to last person" : entry.recipient.map { "Talk to \($0.name)" }
     }
+
+    private static let micHeight = 0.8
 
     // The app icon's colors.
     private static let yellow = Color(red: 0xFA / 255, green: 0xCC / 255, blue: 0x15 / 255)
