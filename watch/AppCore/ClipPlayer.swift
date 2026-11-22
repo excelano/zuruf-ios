@@ -15,15 +15,15 @@ final class ClipPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
     @Published private(set) var loadingClipID: String?
     private var player: AVAudioPlayer?
 
-    // An explicit play counts as heard and posts the played receipt; an
-    // autoplay cannot know whether it was heard, so it does not.
+    // An explicit play of a received clip counts as heard and posts the played
+    // receipt; an autoplay cannot know whether it was heard, so it does not.
     func play(clipID: String, attachment: URL?, category: AVAudioSession.Category) {
         Task {
             guard let data = await audio(clipID: clipID, attachment: attachment) else { return }
             do {
                 try start(data, category: category)
                 playingClipID = clipID
-                if category == .playback {
+                if category == .playback && !isSent(clipID) {
                     await AppModel.shared.markPlayed(clipID)
                 }
             } catch {
@@ -35,6 +35,10 @@ final class ClipPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
     func stop() {
         player?.stop()
         playingClipID = nil
+    }
+
+    private func isSent(_ clipID: String) -> Bool {
+        AppModel.shared.clips?.sent.contains { $0.id == clipID } ?? false
     }
 
     private func audio(clipID: String, attachment: URL?) async -> Data? {

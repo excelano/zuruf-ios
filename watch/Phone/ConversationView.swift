@@ -199,7 +199,7 @@ private struct SentBubble: View {
         HStack {
             Spacer(minLength: 60)
             VStack(alignment: .trailing, spacing: 4) {
-                OutgoingShape(text: clipLength(clip.durationMs), transcript: transcripts.texts[clip.id])
+                OutgoingShape(clipID: clip.id, text: clipLength(clip.durationMs), transcript: transcripts.texts[clip.id])
                     .reactions(clip.reactions, on: .leading)
                 Text("\(clipTime(clip.createdAt)) · \(playedSummary)")
                     .font(.caption2)
@@ -222,7 +222,7 @@ private struct PendingBubble: View {
         HStack {
             Spacer(minLength: 60)
             VStack(alignment: .trailing, spacing: 4) {
-                OutgoingShape(text: "Sending…", transcript: nil)
+                OutgoingShape(clipID: nil, text: "Sending…", transcript: nil)
                     .opacity(0.6)
                 Text("Waiting to send")
                     .font(.caption2)
@@ -232,14 +232,25 @@ private struct PendingBubble: View {
     }
 }
 
+// A clip still waiting to send has no audio on the server to play.
 private struct OutgoingShape: View {
+    let clipID: String?
     let text: String
     let transcript: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label(text, systemImage: "mic.fill")
-                .monospacedDigit()
+            if let clipID {
+                HStack(spacing: 10) {
+                    PlayButton(clipID: clipID)
+                        .tint(.black)
+                    Text(text)
+                        .monospacedDigit()
+                }
+            } else {
+                Label(text, systemImage: "mic.fill")
+                    .monospacedDigit()
+            }
             if let transcript, !transcript.isEmpty {
                 Text(transcript)
             }

@@ -35,7 +35,11 @@ struct InboxView: View {
             if let sent = model.clips?.sent, !sent.isEmpty {
                 Section("Sent") {
                     ForEach(sent) { clip in
-                        SentRow(clip: clip)
+                        NavigationLink {
+                            SentClipView(clipID: clip.id)
+                        } label: {
+                            SentRow(clip: clip)
+                        }
                     }
                 }
             }
@@ -91,7 +95,7 @@ private struct SentRow: View {
     var body: some View {
         VStack(alignment: .leading) {
             Text("To \(model.recipientName(of: clip))")
-            Text(playedSummary)
+            Text(model.playedSummary(of: clip))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
             if !clip.reactions.isEmpty {
@@ -100,9 +104,11 @@ private struct SentRow: View {
             }
         }
     }
+}
 
-    private var playedSummary: String {
-        let names = clip.playedBy.compactMap { model.contacts?.name(ofUser: $0.userId) }
+private extension AppModel {
+    func playedSummary(of clip: SentClip) -> String {
+        let names = clip.playedBy.compactMap { contacts?.name(ofUser: $0.userId) }
         return names.isEmpty ? "Not played yet" : "Played by " + names.formatted(.list(type: .and))
     }
 }
@@ -146,6 +152,37 @@ struct ClipView: View {
                 }
                 ReactionGrid(selected: model.account.flatMap { clip.reaction(of: $0.userID) }) { emoji in
                     Task { await model.react(emoji, to: clip.id) }
+                }
+            }
+        }
+    }
+}
+
+struct SentClipView: View {
+    let clipID: String
+    @EnvironmentObject private var model: AppModel
+    @ObservedObject private var player = ClipPlayer.shared
+
+    var body: some View {
+        if let clip = model.clips?.sent.first(where: { $0.id == clipID }) {
+            content(clip)
+        }
+    }
+
+    private func content(_ clip: SentClip) -> some View {
+        ScrollView {
+            VStack(spacing: 10) {
+                Text("To \(model.recipientName(of: clip))")
+                    .font(.headline)
+                Text(Duration.milliseconds(clip.durationMs), format: .time(pattern: .minuteSecond))
+                    .foregroundStyle(.secondary)
+                Text(model.playedSummary(of: clip))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                Button {
+                    player.play(clipID: clip.id, attachment: nil, category: .playback)
+                } label: {
+                    Label(player.loadingClipID == clip.id ? "Loading…" : "Play", systemImage: "play.fill")
                 }
             }
         }
