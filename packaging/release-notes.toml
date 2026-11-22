@@ -2,9 +2,9 @@
 # against the release being cut, so notes left from last time stop the release
 # rather than reaching the listing.
 
-version = "0.5.1"
+version = "0.5.2"
 
 [locales."en-us"]
 whats-new = """
-Reactions on iPhone are larger and drawn without a background, at the size of the Play button. Tapping the notification for a reaction to your message opens that conversation on iPhone, or the inbox on the watch.
+You can play back your own messages. On iPhone, a message you sent has a Play button in its bubble. On the watch, choosing a message in the Sent list opens it with who it went to, who has played it, and a Play button.
 """
