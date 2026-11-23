@@ -27,7 +27,7 @@ A clip's notification goes to the phone, and iOS shows it there while the phone 
 The app's identity, meaning the team id, the App Store bundle id, the display name and the default server, lives in `watch/Config/Zuruf.xcconfig`, and the version in `watch/Config/Version.xcconfig`. The project's `Zuruf` scheme builds the iPhone app with the watch app embedded, which is how both reach the App Store on one record; `ZurufWatch` builds the watch app alone for installing on a watch during development.
 
 > [!WARNING]
-> Don't submit Zuruf, or a copy of it under another name, to the App Store. Apple's
+> Do NOT submit Zuruf, or a copy of it under another name, to the App Store. Apple's
 > App Review Guideline 4.3 treats copies of other apps as spam, and a 4.3
 > finding can flag the developer account that submitted it, so that every app
 > the account sends afterwards is flagged too. Build it for your own devices and keep
