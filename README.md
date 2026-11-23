@@ -32,3 +32,7 @@ The app's identity, meaning the team id, the App Store bundle id, the display na
 > finding can flag the developer account that submitted it, so that every app
 > the account sends afterwards is flagged too. Build it for your own devices and keep
 > it there.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
