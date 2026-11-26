@@ -5,9 +5,9 @@
 
 import Foundation
 
-// The set people know from Messages. The server accepts only these.
+// The emoji offered to react with. The server keeps the same list in reactions.php.
 enum ReactionPalette {
-    static let emoji = ["👍", "👎", "❤️", "😂", "‼️", "❓"]
+    static let emoji = ["👍", "👎", "❤️", "🚡", "‼️", "❓"]
 }
 
 // One emoji on a clip, with how many people chose it.
